@@ -94,7 +94,6 @@
             font-weight: bold;
         }
     </style>
-<base target="_blank">
 </head>
 <body>
     <h1>⚔️ 红蓝对决 - 增强版 🏹</h1>
@@ -102,8 +101,8 @@
     <div style="position: relative;">
         <canvas id="gameCanvas" width="1200" height="600"></canvas>
         <div id="ammo-display">
-            <span style="color: #e74c3c;">🔴 弓箭: <span id="red-arrows">3</span>/3</span>
-            <span style="color: #3498db;">🔵 弓箭: <span id="blue-arrows">3</span>/3</span>
+            <span style="color: #e74c3c;">🔴 弓箭: <span id="red-arrows">5</span>/5</span>
+            <span style="color: #3498db;">🔵 弓箭: <span id="blue-arrows">5</span>/5</span>
         </div>
     </div>
     
@@ -136,28 +135,31 @@
         const gravity = 0.5;
         const groundY = 550;
         
-        // 地图元素
+        // 地图元素 - 重新设计更合理的跳板高度
         const platforms = [
             // 地面坑洞 (x, y, width, height, type)
             {x: 0, y: groundY, width: 300, height: 50, type: 'ground'},
             {x: 400, y: groundY, width: 400, height: 50, type: 'ground'},
             {x: 900, y: groundY, width: 300, height: 50, type: 'ground'},
             
-            // 踏板平台 - 左侧高台
-            {x: 100, y: 400, width: 150, height: 20, type: 'platform', jumpBoost: true},
-            {x: 50, y: 250, width: 120, height: 20, type: 'platform', jumpBoost: true},
+            // 第一层跳板 - 容易跳上去 (高度差60-80px)
+            {x: 150, y: 480, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            {x: 350, y: 450, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            {x: 550, y: 480, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            {x: 750, y: 450, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            {x: 950, y: 480, width: 120, height: 20, type: 'platform', jumpBoost: false},
             
-            // 踏板平台 - 中间区域
-            {x: 500, y: 350, width: 200, height: 20, type: 'platform', jumpBoost: true},
-            {x: 550, y: 200, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            // 第二层跳板 - 中等高度 (从第一层可轻松跳上去)
+            {x: 250, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            {x: 500, y: 350, width: 120, height: 20, type: 'platform', jumpBoost: true},
+            {x: 800, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: true},
             
-            // 踏板平台 - 右侧高台
-            {x: 950, y: 400, width: 150, height: 20, type: 'platform', jumpBoost: true},
-            {x: 1000, y: 250, width: 120, height: 20, type: 'platform', jumpBoost: true},
+            // 第三层跳板 - 高台 (从第二层跳上去)
+            {x: 400, y: 280, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            {x: 650, y: 280, width: 100, height: 20, type: 'platform', jumpBoost: true},
             
-            // 普通平台（无弹跳加成）
-            {x: 300, y: 300, width: 100, height: 20, type: 'platform'},
-            {x: 800, y: 300, width: 100, height: 20, type: 'platform'},
+            // 最高层 - 中央制高点 (需要连续跳跃)
+            {x: 525, y: 200, width: 100, height: 20, type: 'platform', jumpBoost: true},
         ];
         
         // 坑洞（掉下去即死）
@@ -185,9 +187,9 @@
             attackType: '',
             onGround: false,
             invincible: 0,
-            arrowsLeft: 3,
-            maxArrows: 3,
-            swordLength: 5, // 5个单位长度
+            arrowsLeft: 5,  // 改为5发
+            maxArrows: 5,   // 改为5发
+            swordLength: 5,
             onPlatform: false,
             jumpBoosted: false
         };
@@ -210,8 +212,8 @@
             attackType: '',
             onGround: false,
             invincible: 0,
-            arrowsLeft: 3,
-            maxArrows: 3,
+            arrowsLeft: 5,  // 改为5发
+            maxArrows: 5,   // 改为5发
             swordLength: 5,
             onPlatform: false,
             jumpBoosted: false
@@ -244,7 +246,7 @@
         function player1Attack(type) {
             if (player1.attacking) return;
             
-            if (type === 'bow' && player1.arrowsLeft <= 0) return; // 没箭了
+            if (type === 'bow' && player1.arrowsLeft <= 0) return;
             
             player1.attacking = true;
             player1.attackType = type;
@@ -268,7 +270,7 @@
         function player2Attack(type) {
             if (player2.attacking) return;
             
-            if (type === 'bow' && player2.arrowsLeft <= 0) return; // 没箭了
+            if (type === 'bow' && player2.arrowsLeft <= 0) return;
             
             player2.attacking = true;
             player2.attackType = type;
@@ -321,7 +323,7 @@
                     
                     // 踏板弹跳加成
                     if (player1.jumpBoosted) {
-                        player1.vy *= 1.5; // 跳得更高
+                        player1.vy *= 1.4;
                         player1.jumpBoosted = false;
                     }
                 }
@@ -351,7 +353,7 @@
                     
                     // 踏板弹跳加成
                     if (player2.jumpBoosted) {
-                        player2.vy *= 1.5;
+                        player2.vy *= 1.4;
                         player2.jumpBoosted = false;
                     }
                 }
@@ -383,7 +385,7 @@
                             } else {
                                 p.onPlatform = true;
                                 if (plat.jumpBoost) {
-                                    p.jumpBoosted = true; // 标记可以高跳
+                                    p.jumpBoosted = true;
                                 }
                             }
                         }
@@ -461,25 +463,22 @@
             }
         }
         
-        // 剑攻击检测 - 长度5个单位，更帅气
+        // 剑攻击检测
         function checkSwordHit(attacker, target) {
             if (!attacker.attacking || attacker.attackType !== 'sword') return;
-            if (attacker.attackTimer !== 18) return; // 只在攻击前段检测
+            if (attacker.attackTimer !== 18) return;
             
-            // 剑长5个单位 (每个单位10像素，总长50像素)
             const swordLength = 50;
             const swordWidth = 12;
             
             let attackX = attacker.facing === 1 ? attacker.x + attacker.width : attacker.x - swordLength;
             let attackY = attacker.y + 10;
             
-            // 检测碰撞
             if (attackX < target.x + target.width && attackX + swordLength > target.x &&
                 attackY < target.y + target.height && attackY + swordWidth > target.y) {
                 if (target.invincible === 0) {
                     target.hp--;
                     target.invincible = 60;
-                    // 强力击退效果
                     target.vx = attacker.facing * 12;
                     target.vy = -8;
                     updateHP();
@@ -504,7 +503,6 @@
             ctx.fillStyle = '#000';
             pits.forEach(pit => {
                 ctx.fillRect(pit.x, pit.y, pit.width, canvas.height - pit.y);
-                // 深渊边缘警告
                 ctx.fillStyle = '#e74c3c';
                 ctx.fillRect(pit.x, pit.y, 5, 10);
                 ctx.fillRect(pit.x + pit.width - 5, pit.y, 5, 10);
@@ -514,25 +512,22 @@
             // 绘制平台
             platforms.forEach(plat => {
                 if (plat.type === 'ground') {
-                    // 地面
                     ctx.fillStyle = '#2ecc71';
                     ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
                     ctx.fillStyle = '#27ae60';
                     ctx.fillRect(plat.x, plat.y, plat.width, 5);
                 } else {
-                    // 踏板平台
                     if (plat.jumpBoost) {
-                        // 弹跳踏板 - 金色发光效果
+                        // 弹跳踏板 - 金色
                         ctx.fillStyle = '#f1c40f';
                         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
                         ctx.fillStyle = '#f39c12';
                         ctx.fillRect(plat.x, plat.y + 15, plat.width, 5);
-                        // 箭头指示
                         ctx.fillStyle = '#fff';
                         ctx.font = '16px Arial';
                         ctx.fillText('↑', plat.x + plat.width/2 - 8, plat.y - 5);
                     } else {
-                        // 普通平台
+                        // 普通平台 - 灰色
                         ctx.fillStyle = '#95a5a6';
                         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
                         ctx.fillStyle = '#7f8c8d';
@@ -551,18 +546,15 @@
                 ctx.translate(arrow.x, arrow.y);
                 ctx.rotate(arrow.vx > 0 ? 0 : Math.PI);
                 
-                // 箭杆
                 ctx.fillStyle = arrow.color;
                 ctx.fillRect(-10, -2, 20, 4);
                 
-                // 箭头
                 ctx.beginPath();
                 ctx.moveTo(10, -4);
                 ctx.lineTo(18, 0);
                 ctx.lineTo(10, 4);
                 ctx.fill();
                 
-                // 箭羽
                 ctx.fillStyle = '#fff';
                 ctx.beginPath();
                 ctx.moveTo(-10, -2);
@@ -579,11 +571,10 @@
             });
         }
         
-        // 绘制玩家 - 更帅气的剑
+        // 绘制玩家
         function drawPlayer(p) {
             ctx.save();
             
-            // 无敌闪烁效果
             if (p.invincible > 0 && Math.floor(p.invincible / 5) % 2 === 0) {
                 ctx.globalAlpha = 0.5;
             }
@@ -592,7 +583,7 @@
             ctx.fillStyle = p.color;
             ctx.fillRect(p.x, p.y, p.width, p.height);
             
-            // 头盔/头部装饰
+            // 头盔
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
             ctx.fillRect(p.x + 5, p.y + 5, p.width - 10, 10);
             
@@ -603,15 +594,13 @@
             ctx.fillStyle = 'black';
             ctx.fillRect(eyeX + (p.facing === 1 ? 2 : 0), p.y + 9, 3, 3);
             
-            // 帅气的长剑（长度5个单位 = 50像素）
+            // 帅气的长剑
             const swordLength = 50;
             
             if (p.attacking && p.attackType === 'sword') {
-                // 攻击动画 - 挥剑轨迹
                 ctx.save();
                 ctx.translate(p.x + p.width/2, p.y + 25);
                 
-                // 根据攻击进度计算角度
                 let progress = (25 - p.attackTimer) / 25;
                 let angle = p.facing === 1 ? 
                     -Math.PI/3 + progress * Math.PI/1.5 : 
@@ -619,30 +608,24 @@
                 
                 ctx.rotate(angle);
                 
-                // 剑光效果
                 ctx.strokeStyle = 'rgba(255,255,255,0.5)';
                 ctx.lineWidth = 8;
                 ctx.beginPath();
                 ctx.arc(0, 0, swordLength/2, -Math.PI/4, Math.PI/4);
                 ctx.stroke();
                 
-                // 剑柄
                 ctx.fillStyle = '#8b4513';
                 ctx.fillRect(-5, -3, 15, 6);
                 
-                // 护手
                 ctx.fillStyle = '#f1c40f';
                 ctx.fillRect(8, -8, 6, 16);
                 
-                // 剑刃（5单位长度）
                 ctx.fillStyle = '#bdc3c7';
                 ctx.fillRect(12, -4, swordLength, 8);
                 
-                // 剑刃高光
                 ctx.fillStyle = '#ecf0f1';
                 ctx.fillRect(12, -2, swordLength, 3);
                 
-                // 剑尖
                 ctx.fillStyle = '#bdc3c7';
                 ctx.beginPath();
                 ctx.moveTo(12 + swordLength, -4);
@@ -652,28 +635,22 @@
                 
                 ctx.restore();
             } else {
-                // 持剑姿势
                 ctx.save();
                 ctx.translate(p.x + (p.facing === 1 ? 25 : 5), p.y + 20);
                 ctx.rotate(p.facing === 1 ? 0 : Math.PI);
                 
-                // 剑柄
                 ctx.fillStyle = '#8b4513';
                 ctx.fillRect(-5, -3, 15, 6);
                 
-                // 护手
                 ctx.fillStyle = '#f1c40f';
                 ctx.fillRect(8, -8, 6, 16);
                 
-                // 剑刃（5单位长度）
                 ctx.fillStyle = '#95a5a6';
                 ctx.fillRect(12, -4, swordLength, 8);
                 
-                // 剑刃高光
                 ctx.fillStyle = '#bdc3c7';
                 ctx.fillRect(12, -2, swordLength, 3);
                 
-                // 剑尖
                 ctx.fillStyle = '#95a5a6';
                 ctx.beginPath();
                 ctx.moveTo(12 + swordLength, -4);
@@ -684,14 +661,13 @@
                 ctx.restore();
             }
             
-            // 弓（背在身后）
+            // 弓
             ctx.strokeStyle = '#8b4513';
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(p.x + (p.facing === 1 ? -5 : 35), p.y + 20, 12, Math.PI/2, -Math.PI/2, true);
             ctx.stroke();
             
-            // 弓弦
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -704,7 +680,7 @@
             ctx.font = 'bold 14px Arial';
             ctx.fillText('HP:' + p.hp, p.x - 5, p.y - 8);
             
-            // 弹药指示（小图标）
+            // 弹药指示
             if (p.arrowsLeft > 0) {
                 ctx.fillStyle = '#f1c40f';
                 for(let i=0; i<p.arrowsLeft; i++) {
@@ -745,7 +721,6 @@
         
         // 重置游戏
         function resetGame() {
-            // 重置玩家1
             player1.x = 150;
             player1.y = groundY - 40;
             player1.hp = player1.maxHp;
@@ -756,7 +731,6 @@
             player1.attacking = false;
             player1.attackTimer = 0;
             
-            // 重置玩家2
             player2.x = 1050;
             player2.y = groundY - 40;
             player2.hp = player2.maxHp;
@@ -781,7 +755,6 @@
             requestAnimationFrame(gameLoop);
         }
         
-        // 启动游戏
         gameLoop();
     </script>
 </body>
