@@ -160,6 +160,11 @@
             color: #ff6b6b;
         }
         
+        .tag-racing {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+        }
+        
         .play-btn {
             display: inline-block;
             margin-top: 15px;
@@ -202,6 +207,23 @@
     </header>
     
     <main class="games-container">
+        <!-- 赛博赛车 HexGL -->
+        <div class="game-card" onclick="window.location.href='./games/racing/'">
+            <div class="game-preview" style="background: linear-gradient(135deg, #0a0a2e 0%, #1a0a3e 100%);">
+                <span class="game-icon">🏎️💨</span>
+            </div>
+            <div class="game-info">
+                <h2 class="game-title" style="color: #ff6b6b; text-shadow: 0 0 10px rgba(255,107,107,0.5);">赛博赛车 HexGL</h2>
+                <p class="game-desc">未来主义科幻赛车游戏！基于 HexGL 的 3D 极速体验，WASD 驾驶，空格加速，在霓虹赛道上飞驰。支持高质量画面和多种控制方式！</p>
+                <div class="game-meta">
+                    <span class="tag tag-pc">💻 电脑版</span>
+                    <span class="tag tag-racing">赛车</span>
+                    <span class="tag tag-hard">3D WebGL</span>
+                </div>
+                <a href="./games/racing/" class="play-btn" style="background: linear-gradient(45deg, #ff6b6b, #ee5a6f);">极速狂飙 →</a>
+            </div>
+        </div>
+        
         <!-- 猫鼠大战 -->
         <div class="game-card" onclick="window.location.href='./games/cat-mouse/'">
             <div class="game-preview">
