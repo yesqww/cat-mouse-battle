@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>红蓝大侠对决 - 修复版</title>
+    <title>红蓝大侠对决 - 完全版</title>
     <style>
         body {
             margin: 0;
@@ -99,7 +99,7 @@
     <h1>⚔️ 红蓝大侠对决 🏹</h1>
     
     <div style="position: relative;">
-        <canvas id="gameCanvas" width="1200" height="600"></canvas>
+        <canvas id="gameCanvas" width="1200" height="800"></canvas>
         <div id="ammo-display">
             <span style="color: #e74c3c;">🔴 弓箭: <span id="red-arrows">5</span>/5</span>
             <span style="color: #3498db;">🔵 弓箭: <span id="blue-arrows">5</span>/5</span>
@@ -133,33 +133,53 @@
         // 游戏状态
         let gameRunning = true;
         const gravity = 0.5;
-        const groundY = 550;
+        const groundY = 750; // 地面降低，给上方更多空间
         
-        // 地图元素
+        // 地图元素 - 更多空中踏板，更高地图
         const platforms = [
             // 地面
             {x: 0, y: groundY, width: 300, height: 50, type: 'ground'},
             {x: 400, y: groundY, width: 400, height: 50, type: 'ground'},
             {x: 900, y: groundY, width: 300, height: 50, type: 'ground'},
             
-            // 第一层跳板
-            {x: 150, y: 480, width: 120, height: 20, type: 'platform', jumpBoost: false},
-            {x: 350, y: 450, width: 120, height: 20, type: 'platform', jumpBoost: false},
-            {x: 550, y: 480, width: 120, height: 20, type: 'platform', jumpBoost: false},
-            {x: 750, y: 450, width: 120, height: 20, type: 'platform', jumpBoost: false},
-            {x: 950, y: 480, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            // 第一层跳板 - 低层平台
+            {x: 100, y: 680, width: 100, height: 20, type: 'platform', jumpBoost: false},
+            {x: 300, y: 650, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            {x: 550, y: 680, width: 100, height: 20, type: 'platform', jumpBoost: false},
+            {x: 800, y: 650, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            {x: 1000, y: 680, width: 100, height: 20, type: 'platform', jumpBoost: false},
             
             // 第二层跳板
-            {x: 250, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: true},
-            {x: 500, y: 350, width: 120, height: 20, type: 'platform', jumpBoost: true},
-            {x: 800, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            {x: 200, y: 580, width: 100, height: 20, type: 'platform', jumpBoost: false},
+            {x: 450, y: 550, width: 120, height: 20, type: 'platform', jumpBoost: true},
+            {x: 700, y: 580, width: 100, height: 20, type: 'platform', jumpBoost: false},
+            {x: 950, y: 550, width: 100, height: 20, type: 'platform', jumpBoost: true},
             
             // 第三层跳板
-            {x: 400, y: 280, width: 100, height: 20, type: 'platform', jumpBoost: true},
-            {x: 650, y: 280, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            {x: 100, y: 480, width: 80, height: 20, type: 'platform', jumpBoost: true},
+            {x: 350, y: 450, width: 100, height: 20, type: 'platform', jumpBoost: false},
+            {x: 600, y: 480, width: 100, height: 20, type: 'platform', jumpBoost: false},
+            {x: 850, y: 450, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            {x: 1050, y: 480, width: 80, height: 20, type: 'platform', jumpBoost: true},
             
-            // 最高层
-            {x: 525, y: 200, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            // 第四层跳板
+            {x: 250, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            {x: 500, y: 350, width: 120, height: 20, type: 'platform', jumpBoost: true},
+            {x: 750, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            
+            // 第五层跳板
+            {x: 150, y: 280, width: 80, height: 20, type: 'platform', jumpBoost: true},
+            {x: 400, y: 280, width: 100, height: 20, type: 'platform', jumpBoost: false},
+            {x: 650, y: 280, width: 100, height: 20, type: 'platform', jumpBoost: false},
+            {x: 900, y: 280, width: 80, height: 20, type: 'platform', jumpBoost: true},
+            
+            // 第六层 - 高空平台
+            {x: 300, y: 200, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            {x: 550, y: 180, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            {x: 800, y: 200, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            
+            // 最高层 - 巅峰对决
+            {x: 525, y: 100, width: 150, height: 20, type: 'platform', jumpBoost: true},
         ];
         
         // 坑洞
@@ -193,14 +213,15 @@
                 invincible: 0,
                 arrowsLeft: 5,
                 maxArrows: 5,
-                swordLength: 50, // 像素长度
+                swordLength: 50,
                 swordWidth: 12,
                 onPlatform: false,
                 jumpBoosted: false,
                 crouching: false,
                 crouchKeyHeld: false,
                 animTimer: 0,
-                attackCooldown: 0
+                attackCooldown: 0,
+                hitTargets: [] // 记录本次攻击已命中的目标
             };
         }
         
@@ -217,11 +238,8 @@
         document.addEventListener('keydown', (e) => {
             keys[e.key] = true;
             
-            // 红色玩家攻击
             if (e.key === '1' && gameRunning) player1Attack('sword');
             if (e.key === '2' && gameRunning) player1Attack('bow');
-            
-            // 蓝色玩家攻击
             if (e.key === ',' && gameRunning) player2Attack('sword');
             if (e.key === '.' && gameRunning) player2Attack('bow');
         });
@@ -239,7 +257,8 @@
             player1.attacking = true;
             player1.attackType = type;
             player1.attackTimer = type === 'sword' ? 20 : 15;
-            player1.attackCooldown = 30; // 攻击冷却
+            player1.attackCooldown = 25;
+            player1.hitTargets = []; // 清空已命中列表
             
             if (type === 'bow') {
                 player1.arrowsLeft--;
@@ -264,7 +283,8 @@
             player2.attacking = true;
             player2.attackType = type;
             player2.attackTimer = type === 'sword' ? 20 : 15;
-            player2.attackCooldown = 30;
+            player2.attackCooldown = 25;
+            player2.hitTargets = []; // 清空已命中列表
             
             if (type === 'bow') {
                 player2.arrowsLeft--;
@@ -292,7 +312,6 @@
         function update() {
             if (!gameRunning) return;
             
-            // 更新玩家
             updatePlayer(player1, {
                 left: keys['a'] || keys['A'],
                 right: keys['d'] || keys['D'],
@@ -307,7 +326,7 @@
                 crouch: keys['ArrowDown']
             });
             
-            // 剑攻击检测 - 在更新后检测
+            // 剑攻击检测 - 每帧检测，但每个目标只命中一次
             if (player1.attacking && player1.attackType === 'sword') {
                 checkSwordHit(player1, player2);
             }
@@ -315,12 +334,10 @@
                 checkSwordHit(player2, player1);
             }
             
-            // 箭矢更新
             updateArrows();
         }
         
         function updatePlayer(p, input) {
-            // 冷却递减
             if (p.attackCooldown > 0) p.attackCooldown--;
             
             // 下蹲处理
@@ -434,13 +451,12 @@
                 if (p.attackTimer === 0) {
                     p.attacking = false;
                     p.attackType = '';
+                    p.hitTargets = []; // 攻击结束清空命中列表
                 }
             }
             
-            // 动画计时器
             p.animTimer++;
             
-            // 掉出地图
             if (p.y > canvas.height) {
                 p.hp = 0;
                 updateHP();
@@ -482,13 +498,13 @@
             }
         }
         
-        // 剑攻击检测 - 修复版
+        // 剑攻击检测 - 修复版：每次攻击每个目标只能命中一次，但下次攻击可以再次命中
         function checkSwordHit(attacker, target) {
-            // 只在攻击的前半段检测伤害，避免重复判定
-            if (attacker.attackTimer < 10 || attacker.attackTimer > 18) return;
+            // 只在攻击的有效帧数内检测（第8到第18帧）
+            if (attacker.attackTimer < 8 || attacker.attackTimer > 18) return;
             
-            // 已经命中过这次攻击了
-            if (attacker.hasHit) return;
+            // 检查这个目标是否已经被本次攻击命中过
+            if (attacker.hitTargets.includes(target)) return;
             
             const swordLength = attacker.swordLength;
             const swordWidth = attacker.swordWidth;
@@ -497,11 +513,9 @@
             let attackX, attackY;
             
             if (attacker.facing === 1) {
-                // 朝右
                 attackX = attacker.x + attacker.width;
                 attackY = attacker.crouching ? attacker.y + 5 : attacker.y + 15;
             } else {
-                // 朝左
                 attackX = attacker.x - swordLength;
                 attackY = attacker.crouching ? attacker.y + 5 : attacker.y + 15;
             }
@@ -517,7 +531,10 @@
                     target.invincible = 60;
                     target.vx = attacker.facing * 12;
                     target.vy = -8;
-                    attacker.hasHit = true; // 标记已命中
+                    
+                    // 记录这个目标已被本次攻击命中
+                    attacker.hitTargets.push(target);
+                    
                     updateHP();
                     checkWin();
                 }
@@ -529,9 +546,14 @@
             ctx.fillStyle = '#0f3460';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            // 背景装饰 - 更多层次
+            ctx.fillStyle = 'rgba(255,255,255,0.03)';
+            for(let i=0; i<15; i++) {
+                ctx.fillRect(i*100, 150 + Math.sin(i)*80, 60, 60);
+            }
+            ctx.fillStyle = 'rgba(255,255,255,0.02)';
             for(let i=0; i<10; i++) {
-                ctx.fillRect(i*150, 100 + Math.sin(i)*50, 80, 80);
+                ctx.fillRect(i*150 + 50, 50 + Math.cos(i)*60, 40, 40);
             }
             
             // 坑洞
@@ -558,8 +580,8 @@
                         ctx.fillStyle = '#f39c12';
                         ctx.fillRect(plat.x, plat.y + 15, plat.width, 5);
                         ctx.fillStyle = '#fff';
-                        ctx.font = '16px Arial';
-                        ctx.fillText('↑', plat.x + plat.width/2 - 8, plat.y - 5);
+                        ctx.font = 'bold 14px Arial';
+                        ctx.fillText('↑', plat.x + plat.width/2 - 6, plat.y - 5);
                     } else {
                         ctx.fillStyle = '#95a5a6';
                         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
@@ -569,11 +591,9 @@
                 }
             });
             
-            // 绘制玩家
             drawHumanPlayer(player1);
             drawHumanPlayer(player2);
             
-            // 绘制箭矢
             arrows.forEach(arrow => {
                 ctx.save();
                 ctx.translate(arrow.x, arrow.y);
@@ -604,7 +624,6 @@
             });
         }
         
-        // 绘制人形玩家 - 修复剑方向
         function drawHumanPlayer(p) {
             ctx.save();
             
@@ -649,7 +668,6 @@
             const bodyY = bottomY - legHeight - bodyHeight;
             ctx.fillRect(centerX - bodyWidth/2, bodyY, bodyWidth, bodyHeight);
             
-            // 腰带
             ctx.fillStyle = '#2c3e50';
             ctx.fillRect(centerX - bodyWidth/2, bodyY + bodyHeight - 5, bodyWidth, 5);
             
@@ -658,52 +676,43 @@
             ctx.fillStyle = skinColor;
             ctx.fillRect(centerX - headSize/2, headY, headSize, headSize);
             
-            // 头发/头盔
             ctx.fillStyle = darkColor;
             ctx.fillRect(centerX - headSize/2, headY, headSize, 4);
             ctx.fillRect(centerX - headSize/2 - 2, headY + 2, 2, 6);
             ctx.fillRect(centerX + headSize/2, headY + 2, 2, 6);
             
-            // 眼睛
             ctx.fillStyle = 'white';
             const eyeX = p.facing === 1 ? centerX + 2 : centerX - 6;
             ctx.fillRect(eyeX, headY + 4, 4, 4);
             ctx.fillStyle = 'black';
             ctx.fillRect(eyeX + (p.facing === 1 ? 1 : 0), headY + 5, 2, 2);
             
-            // 手臂和武器 - 修复方向问题
+            // 手臂和武器
             const armY = bodyY + 5;
             
             if (p.attacking && p.attackType === 'sword') {
-                // 挥剑动画 - 根据朝向正确绘制
                 ctx.save();
-                
-                // 移动到肩膀位置
                 ctx.translate(centerX + (p.facing === 1 ? 8 : -8), armY + 10);
                 
-                // 根据朝向和攻击进度计算角度
-                let progress = (20 - p.attackTimer) / 20; // 0到1
-                let baseAngle = p.facing === 1 ? 0 : Math.PI;
+                let progress = (20 - p.attackTimer) / 20;
                 let swingAngle = p.facing === 1 ? 
                     -Math.PI/3 + progress * Math.PI/1.5 : 
                     Math.PI/3 - progress * Math.PI/1.5;
                 
                 ctx.rotate(swingAngle);
                 
-                // 手臂
                 ctx.fillStyle = skinColor;
                 ctx.fillRect(0, -3, 15, 6);
                 
-                // 剑 - 绘制在手臂前方
                 const swordLength = p.swordLength;
                 ctx.fillStyle = '#8b4513';
-                ctx.fillRect(12, -4, 10, 8); // 剑柄
+                ctx.fillRect(12, -4, 10, 8);
                 ctx.fillStyle = '#f1c40f';
-                ctx.fillRect(20, -6, 4, 12); // 护手
+                ctx.fillRect(20, -6, 4, 12);
                 ctx.fillStyle = '#bdc3c7';
-                ctx.fillRect(22, -3, swordLength, 6); // 剑刃
+                ctx.fillRect(22, -3, swordLength, 6);
                 ctx.fillStyle = '#ecf0f1';
-                ctx.fillRect(22, -1, swordLength, 2); // 剑刃高光
+                ctx.fillRect(22, -1, swordLength, 2);
                 ctx.fillStyle = '#95a5a6';
                 ctx.beginPath();
                 ctx.moveTo(22 + swordLength, -3);
@@ -713,19 +722,15 @@
                 
                 ctx.restore();
             } else {
-                // 持剑姿势 - 根据朝向
                 ctx.fillStyle = skinColor;
                 if (p.facing === 1) {
-                    // 朝右
                     ctx.fillRect(centerX, armY, 12, 5);
                     ctx.fillRect(centerX + 10, armY - 2, 5, 10);
                 } else {
-                    // 朝左
                     ctx.fillRect(centerX - 12, armY, 12, 5);
                     ctx.fillRect(centerX - 15, armY - 2, 5, 10);
                 }
                 
-                // 背着的剑 - 根据朝向调整角度
                 ctx.save();
                 ctx.translate(centerX + (p.facing === 1 ? -10 : 10), bodyY + 5);
                 ctx.rotate(p.facing === 1 ? -0.4 : 0.4);
@@ -740,7 +745,6 @@
                 ctx.restore();
             }
             
-            // 弓
             if (!p.attacking || p.attackType !== 'bow') {
                 ctx.strokeStyle = '#8b4513';
                 ctx.lineWidth = 2;
@@ -749,12 +753,10 @@
                 ctx.stroke();
             }
             
-            // 生命指示器
             ctx.fillStyle = 'white';
             ctx.font = 'bold 12px Arial';
             ctx.fillText('HP:' + p.hp, p.x, p.y - 5);
             
-            // 弹药指示
             if (p.arrowsLeft > 0) {
                 ctx.fillStyle = '#f1c40f';
                 for(let i=0; i<p.arrowsLeft; i++) {
@@ -762,7 +764,6 @@
                 }
             }
             
-            // 下蹲指示
             if (isCrouching) {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.fillRect(p.x, p.y, p.width, p.height);
@@ -796,7 +797,6 @@
         }
         
         function resetGame() {
-            // 完全重置玩家状态
             Object.assign(player1, createPlayer(150, groundY - 50, '#e74c3c', 1));
             Object.assign(player2, createPlayer(1050, groundY - 50, '#3498db', -1));
             
