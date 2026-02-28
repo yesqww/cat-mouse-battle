@@ -170,6 +170,11 @@
             color: #9b59b6;
         }
         
+        .tag-fighting {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        
         .play-btn {
             display: inline-block;
             margin-top: 15px;
@@ -212,24 +217,7 @@
     </header>
     
     <main class="games-container">
-        <!-- 赛博赛车 HexGL -->
-        <div class="game-card" onclick="window.open('./games/racing/', '_blank')">
-            <div class="game-preview" style="background: linear-gradient(135deg, #0a0a2e 0%, #1a0a3e 100%);">
-                <span class="game-icon">🏎️💨</span>
-            </div>
-            <div class="game-info">
-                <h2 class="game-title" style="color: #ff6b6b; text-shadow: 0 0 10px rgba(255,107,107,0.5);">赛博赛车 HexGL</h2>
-                <p class="game-desc">未来主义科幻赛车游戏！基于 HexGL 的 3D 极速体验，WASD 驾驶，空格加速，在霓虹赛道上飞驰。支持高质量画面和多种控制方式！</p>
-                <div class="game-meta">
-                    <span class="tag tag-pc">💻 电脑版</span>
-                    <span class="tag tag-racing">赛车</span>
-                    <span class="tag tag-hard">3D WebGL</span>
-                </div>
-                <a href="./games/racing/" target="_blank" class="play-btn" style="background: linear-gradient(45deg, #ff6b6b, #ee5a6f);">极速狂飙 →</a>
-            </div>
-        </div>
-        
-        <!-- 猫鼠大战 -->
+        <!-- 1. 猫鼠大战 -->
         <div class="game-card" onclick="window.open('./games/cat-mouse/', '_blank')">
             <div class="game-preview">
                 <span class="game-icon">🐱🐭</span>
@@ -246,41 +234,24 @@
             </div>
         </div>
         
-        <!-- 赛博枪战 -->
-        <div class="game-card" onclick="window.open('./games/top-down-shooter/', '_blank')">
-            <div class="game-preview" style="background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 100%);">
-                <span class="game-icon">⚡🔫</span>
+        <!-- 2. 俄罗斯方块 Tetris -->
+        <div class="game-card" onclick="window.open('./games/tetris/', '_blank')">
+            <div class="game-preview" style="background: linear-gradient(135deg, #1a0a2e 0%, #0f0520 100%);">
+                <span class="game-icon">🎮🧱</span>
             </div>
             <div class="game-info">
-                <h2 class="game-title" style="color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.5);">赛博枪战</h2>
-                <p class="game-desc">赛博朋克风俯视射击！WASD移动，鼠标瞄准，摧毁 Neon 敌人。多种敌人类型（无人机、坦克、Boss），可破坏障碍物，屏幕震动特效！</p>
+                <h2 class="game-title" style="color: #9b59b6; text-shadow: 0 0 10px rgba(155, 89, 182, 0.5);">俄罗斯方块 Tetris</h2>
+                <p class="game-desc">经典俄罗斯方块！支持手机触屏和电脑键盘。方向键或触屏按钮控制，空格或点击开始。消除行数获得高分，挑战你的反应速度！</p>
                 <div class="game-meta">
+                    <span class="tag tag-mobile">📱 手机电脑通用</span>
                     <span class="tag tag-pc">💻 电脑版</span>
-                    <span class="tag" style="background: rgba(0,255,255,0.2); color: #00ffff;">射击</span>
-                    <span class="tag" style="background: rgba(255,0,102,0.2); color: #ff0066;">赛博朋克</span>
+                    <span class="tag tag-puzzle">益智</span>
                 </div>
-                <a href="./games/top-down-shooter/" target="_blank" class="play-btn" style="background: linear-gradient(45deg, #00ffff, #ff0066);">进入战斗 →</a>
+                <a href="./games/tetris/" target="_blank" class="play-btn" style="background: linear-gradient(45deg, #9b59b6, #8e44ad);">开始游戏 →</a>
             </div>
         </div>
         
-        <!-- 太空射击 双人合作版 -->
-        <div class="game-card" onclick="window.open('./games/space-shooter-duo/', '_blank')">
-            <div class="game-preview" style="background: linear-gradient(135deg, #2d1b1b 0%, #1a0f0f 100%);">
-                <span class="game-icon">🚀👥</span>
-            </div>
-            <div class="game-info">
-                <h2 class="game-title">太空射击 双人合作版</h2>
-                <p class="game-desc">双人键盘合作，自动开火，共抗外星大军！敌人种类繁多，共享生命，考验配合。P1用WASD，P2用方向键。</p>
-                <div class="game-meta">
-                    <span class="tag tag-pc">💻 电脑版</span>
-                    <span class="tag tag-hard">高难度</span>
-                    <span class="tag">双人合作</span>
-                </div>
-                <a href="./games/space-shooter-duo/" target="_blank" class="play-btn">开始挑战 →</a>
-            </div>
-        </div>
-        
-        <!-- 太空射击 经典版 -->
+        <!-- 3. 太空射击 经典版（单人） -->
         <div class="game-card" onclick="window.open('./games/space-shooter/', '_blank')">
             <div class="game-preview" style="background: linear-gradient(135deg, #1a1a3e 0%, #0f0f2e 100%);">
                 <span class="game-icon">🚀👾</span>
@@ -297,20 +268,71 @@
             </div>
         </div>
         
-        <!-- 🆕 俄罗斯方块 Tetris（手机触屏版） -->
-        <div class="game-card" onclick="window.open('./games/tetris/', '_blank')">
-            <div class="game-preview" style="background: linear-gradient(135deg, #1a0a2e 0%, #0f0520 100%);">
-                <span class="game-icon">🎮🧱</span>
+        <!-- 4. 太空射击 双人合作版 -->
+        <div class="game-card" onclick="window.open('./games/space-shooter-duo/', '_blank')">
+            <div class="game-preview" style="background: linear-gradient(135deg, #2d1b1b 0%, #1a0f0f 100%);">
+                <span class="game-icon">🚀👥</span>
             </div>
             <div class="game-info">
-                <h2 class="game-title" style="color: #9b59b6; text-shadow: 0 0 10px rgba(155, 89, 182, 0.5);">俄罗斯方块 Tetris</h2>
-                <p class="game-desc">经典俄罗斯方块！支持手机触屏和电脑键盘。方向键或触屏按钮控制，空格或点击开始。消除行数获得高分，挑战你的反应速度！</p>
+                <h2 class="game-title">太空射击 双人合作版</h2>
+                <p class="game-desc">双人键盘合作，自动开火，共抗外星大军！敌人种类繁多，共享生命，考验配合。P1用WASD，P2用方向键。</p>
                 <div class="game-meta">
-                    <span class="tag tag-mobile">📱 手机电脑通用</span>
                     <span class="tag tag-pc">💻 电脑版</span>
-                    <span class="tag tag-puzzle">益智</span>
+                    <span class="tag tag-hard">高难度</span>
+                    <span class="tag">双人合作</span>
                 </div>
-                <a href="./games/tetris/" target="_blank" class="play-btn" style="background: linear-gradient(45deg, #9b59b6, #8e44ad);">开始游戏 →</a>
+                <a href="./games/space-shooter-duo/" target="_blank" class="play-btn">开始挑战 →</a>
+            </div>
+        </div>
+        
+        <!-- 5. 赛博赛车 HexGL -->
+        <div class="game-card" onclick="window.open('./games/racing/', '_blank')">
+            <div class="game-preview" style="background: linear-gradient(135deg, #0a0a2e 0%, #1a0a3e 100%);">
+                <span class="game-icon">🏎️💨</span>
+            </div>
+            <div class="game-info">
+                <h2 class="game-title" style="color: #ff6b6b; text-shadow: 0 0 10px rgba(255,107,107,0.5);">赛博赛车 HexGL</h2>
+                <p class="game-desc">未来主义科幻赛车游戏！基于 HexGL 的 3D 极速体验，WASD 驾驶，空格加速，在霓虹赛道上飞驰。支持高质量画面和多种控制方式！</p>
+                <div class="game-meta">
+                    <span class="tag tag-pc">💻 电脑版</span>
+                    <span class="tag tag-racing">赛车</span>
+                    <span class="tag tag-hard">3D WebGL</span>
+                </div>
+                <a href="./games/racing/" target="_blank" class="play-btn" style="background: linear-gradient(45deg, #ff6b6b, #ee5a6f);">极速狂飙 →</a>
+            </div>
+        </div>
+        
+        <!-- 6. 红蓝大侠争霸（新增） -->
+        <div class="game-card" onclick="window.open('./games/fight/', '_blank')">
+            <div class="game-preview" style="background: linear-gradient(135deg, #2c0a0a 0%, #0a0a2c 100%);">
+                <span class="game-icon">⚔️🏹</span>
+            </div>
+            <div class="game-info">
+                <h2 class="game-title" style="color: #e74c3c; text-shadow: 0 0 10px rgba(231, 76, 60, 0.5);">红蓝大侠争霸</h2>
+                <p class="game-desc">双人格斗对战！红色(WASD+1剑2弓) vs 蓝色(方向键+,剑.弓)。左手剑右手弓，3条命决胜负，平面直线地图，支持跳跃闪避！</p>
+                <div class="game-meta">
+                    <span class="tag tag-pc">💻 电脑版</span>
+                    <span class="tag tag-fighting">格斗</span>
+                    <span class="tag">双人对战</span>
+                </div>
+                <a href="./games/fight/" target="_blank" class="play-btn" style="background: linear-gradient(45deg, #e74c3c, #3498db);">一决高下 →</a>
+            </div>
+        </div>
+        
+        <!-- 7. 赛博枪战 -->
+        <div class="game-card" onclick="window.open('./games/top-down-shooter/', '_blank')">
+            <div class="game-preview" style="background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 100%);">
+                <span class="game-icon">⚡🔫</span>
+            </div>
+            <div class="game-info">
+                <h2 class="game-title" style="color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.5);">赛博枪战</h2>
+                <p class="game-desc">赛博朋克风俯视射击！WASD移动，鼠标瞄准，摧毁 Neon 敌人。多种敌人类型（无人机、坦克、Boss），可破坏障碍物，屏幕震动特效！</p>
+                <div class="game-meta">
+                    <span class="tag tag-pc">💻 电脑版</span>
+                    <span class="tag" style="background: rgba(0,255,255,0.2); color: #00ffff;">射击</span>
+                    <span class="tag" style="background: rgba(255,0,102,0.2); color: #ff0066;">赛博朋克</span>
+                </div>
+                <a href="./games/top-down-shooter/" target="_blank" class="play-btn" style="background: linear-gradient(45deg, #00ffff, #ff0066);">进入战斗 →</a>
             </div>
         </div>
     </main>
