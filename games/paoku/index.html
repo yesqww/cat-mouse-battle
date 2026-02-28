@@ -148,6 +148,7 @@
             font-size: 16px;
             box-shadow: 0 4px 0 #1a1a3e;
             transition: all 0.1s;
+            position: relative;
         }
         
         .key.active {
@@ -156,6 +157,55 @@
             background: linear-gradient(145deg, #4ecdc4, #3dbdb4);
             border-color: #4ecdc4;
             color: #000;
+        }
+        
+        .key.sprint-ready {
+            animation: sprintPulse 0.6s infinite;
+            border-color: #ffd93d;
+            box-shadow: 0 0 15px rgba(255, 217, 61, 0.6);
+        }
+        
+        @keyframes sprintPulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 15px rgba(255, 217, 61, 0.6);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 0 25px rgba(255, 217, 61, 0.9);
+            }
+        }
+        
+        .key.sprinting {
+            background: linear-gradient(145deg, #ffd93d, #ff6b6b) !important;
+            border-color: #ffd93d !important;
+            animation: sprintingShake 0.1s infinite;
+        }
+        
+        @keyframes sprintingShake {
+            0%, 100% { transform: translateY(4px) translateX(0); }
+            25% { transform: translateY(4px) translateX(-1px); }
+            75% { transform: translateY(4px) translateX(1px); }
+        }
+        
+        .sprint-indicator {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffd93d;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+        
+        .key.sprint-ready .sprint-indicator {
+            opacity: 1;
         }
         
         .trap-keys {
@@ -366,6 +416,7 @@
         }
     </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
     <h1>⚡ 陷阱对决 - 策略跑酷 ⚡</h1>
@@ -390,7 +441,7 @@
                     <ul>
                         <li>沿黄色路线移动（不能偏离）</li>
                         <li><strong>← →</strong> 控制前进后退</li>
-                        <li><strong>双击方向键</strong> 冲刺（消耗体力）</li>
+                        <li><strong>快速双击方向键</strong> 冲刺（消耗体力）</li>
                         <li>可以暂停观察陷阱时机</li>
                         <li>到达终点即可获胜</li>
                     </ul>
@@ -420,10 +471,16 @@
         <div class="control-group escape">
             <h3>🏃 逃跑者控制</h3>
             <div class="key-row">
-                <div class="key" id="keyLeft">←</div>
-                <div class="key" id="keyRight">→</div>
+                <div class="key" id="keyLeft">
+                    ←
+                    <span class="sprint-indicator">双击冲刺!</span>
+                </div>
+                <div class="key" id="keyRight">
+                    →
+                    <span class="sprint-indicator">双击冲刺!</span>
+                </div>
             </div>
-            <div class="hint">双击冲刺 ⚡ | 长按移动 | 松手暂停</div>
+            <div class="hint">快速双击冲刺 ⚡ | 长按移动 | 松手暂停</div>
         </div>
         
         <div class="control-group saboteur">
@@ -461,7 +518,7 @@
             winner: null
         };
         
-        // 逃跑者
+        // 逃跑者 - 优化冲刺参数
         const runner = {
             x: 50,
             y: 300,
@@ -472,21 +529,25 @@
             facing: 1,
             speed: 0,
             baseSpeed: 3,
-            sprintSpeed: 8,
+            sprintSpeed: 9, // 略微提升冲刺速度
             isSprinting: false,
             stamina: 100,
             maxStamina: 100,
-            staminaRegen: 0.5,
-            staminaCost: 2,
+            staminaRegen: 0.8, // 加快回复
+            sprintCost: 1.5, // 改为持续消耗而非瞬间扣除
             invincible: 0,
             respawnCount: 0,
             trail: [],
+            
+            // 双击检测优化
             lastKeyTime: 0,
             lastKey: null,
-            doubleClickThreshold: 300
+            doubleClickThreshold: 400, // 增加到400ms，更宽松
+            keyReleased: true, // 新增：确保按键已释放
+            sprintReady: false // 新增：冲刺就绪状态
         };
         
-        // 固定路径点 - 重新设计让陷阱能均匀分布
+        // 固定路径点
         const pathPoints = [
             { x: 50, y: 300 },      // 0: 起点
             { x: 150, y: 300 },     // 1
@@ -501,40 +562,31 @@
             { x: 950, y: 350 }      // 10: 下降到终点 8-9-10号陷阱区域
         ];
         
-        // 陷阱 - 全部重新定位到路线上
+        // 陷阱
         let traps = [];
         
         function initTraps() {
             traps = [
-                // 第一段直路 (起点后)
                 { id: 1, x: 200, y: 280, w: 40, h: 40, used: false, active: false, timer: 0, origY: 280 },
-                
-                // 低处平台段
                 { id: 2, x: 380, y: 430, w: 40, h: 40, used: false, active: false, timer: 0, origY: 430 },
                 { id: 3, x: 480, y: 430, w: 40, h: 40, used: false, active: false, timer: 0, origY: 430 },
-                
-                // 中段上升
                 { id: 4, x: 600, y: 280, w: 40, h: 40, used: false, active: false, timer: 0, origY: 280 },
                 { id: 5, x: 700, y: 280, w: 40, h: 40, used: false, active: false, timer: 0, origY: 280 },
-                
-                // 高处
                 { id: 6, x: 800, y: 130, w: 40, h: 40, used: false, active: false, timer: 0, origY: 130 },
                 { id: 7, x: 870, y: 130, w: 40, h: 40, used: false, active: false, timer: 0, origY: 130 },
-                
-                // 终点前下降段 - 8、9、10号密集防守
                 { id: 8, x: 900, y: 250, w: 40, h: 40, used: false, active: false, timer: 0, origY: 250 },
                 { id: 9, x: 920, y: 330, w: 40, h: 40, used: false, active: false, timer: 0, origY: 330 },
                 { id: 10, x: 940, y: 380, w: 40, h: 40, used: false, active: false, timer: 0, origY: 380 }
             ];
         }
         
-        // 平台（视觉）
+        // 平台
         const platforms = [
-            { x: 0, y: 320, w: 300, h: 15 },      // 起点平台
-            { x: 300, y: 470, w: 300, h: 15 },    // 低平台
-            { x: 600, y: 320, w: 200, h: 15 },    // 中平台
-            { x: 800, y: 170, w: 150, h: 15 },    // 高平台
-            { x: 900, y: 370, w: 100, h: 15 }     // 终点平台
+            { x: 0, y: 320, w: 300, h: 15 },
+            { x: 300, y: 470, w: 300, h: 15 },
+            { x: 600, y: 320, w: 200, h: 15 },
+            { x: 800, y: 170, w: 150, h: 15 },
+            { x: 900, y: 370, w: 100, h: 15 }
         ];
         
         // 粒子
@@ -569,7 +621,7 @@
             }
         }
         
-        // 输入处理
+        // 输入处理 - 优化双击检测
         const keys = {
             ArrowLeft: false,
             ArrowRight: false
@@ -580,21 +632,26 @@
             
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                 e.preventDefault();
-                const now = Date.now();
-                const isDouble = (now - runner.lastKeyTime < runner.doubleClickThreshold) && 
-                                (runner.lastKey === e.key);
                 
-                keys[e.key] = true;
-                
-                if (isDouble && runner.stamina > 30) {
-                    runner.isSprinting = true;
-                    runner.stamina -= 30;
-                    createSprintEffect();
+                // 只在按键从释放状态变为按下时检测（避免按住重复触发）
+                if (!keys[e.key]) {
+                    const now = Date.now();
+                    
+                    // 检测是否为同方向快速双击
+                    const isDoubleTap = (now - runner.lastKeyTime < runner.doubleClickThreshold) && 
+                                       (runner.lastKey === e.key) &&
+                                       runner.keyReleased; // 确保中间有释放
+                    
+                    if (isDoubleTap && runner.stamina > 20 && !runner.isSprinting) {
+                        startSprint();
+                    }
+                    
+                    runner.lastKeyTime = now;
+                    runner.lastKey = e.key;
+                    runner.keyReleased = false; // 标记为未释放
                 }
                 
-                runner.lastKeyTime = now;
-                runner.lastKey = e.key;
-                
+                keys[e.key] = true;
                 updateKeyVisuals();
             }
             
@@ -608,7 +665,13 @@
         document.addEventListener('keyup', (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                 keys[e.key] = false;
-                runner.isSprinting = false;
+                runner.keyReleased = true; // 标记为已释放
+                
+                // 松手时停止冲刺
+                if (runner.isSprinting) {
+                    runner.isSprinting = false;
+                }
+                
                 updateKeyVisuals();
             }
             if (e.key >= '0' && e.key <= '9') {
@@ -617,9 +680,39 @@
             }
         });
         
+        function startSprint() {
+            runner.isSprinting = true;
+            runner.stamina -= 15; // 启动消耗
+            createSprintEffect();
+            
+            // 视觉反馈
+            const keyEl = document.getElementById(runner.lastKey === 'ArrowLeft' ? 'keyLeft' : 'keyRight');
+            keyEl.classList.add('sprinting');
+            setTimeout(() => keyEl.classList.remove('sprinting'), 200);
+        }
+        
         function updateKeyVisuals() {
-            document.getElementById('keyLeft').classList.toggle('active', keys.ArrowLeft);
-            document.getElementById('keyRight').classList.toggle('active', keys.ArrowRight);
+            const leftKey = document.getElementById('keyLeft');
+            const rightKey = document.getElementById('keyRight');
+            
+            leftKey.classList.toggle('active', keys.ArrowLeft);
+            rightKey.classList.toggle('active', keys.ArrowRight);
+            
+            // 冲刺就绪提示
+            const now = Date.now();
+            const canSprint = runner.stamina > 20 && !runner.isSprinting;
+            
+            if (canSprint && runner.lastKey === 'ArrowLeft' && (now - runner.lastKeyTime < runner.doubleClickThreshold)) {
+                leftKey.classList.add('sprint-ready');
+            } else {
+                leftKey.classList.remove('sprint-ready');
+            }
+            
+            if (canSprint && runner.lastKey === 'ArrowRight' && (now - runner.lastKeyTime < runner.doubleClickThreshold)) {
+                rightKey.classList.add('sprint-ready');
+            } else {
+                rightKey.classList.remove('sprint-ready');
+            }
         }
         
         function updateTrapKeyVisual(num, pressed) {
@@ -650,8 +743,14 @@
         }
         
         function createSprintEffect() {
+            // 更明显的冲刺特效
+            for (let i = 0; i < 8; i++) {
+                const offset = (Math.random() - 0.5) * 20;
+                particles.push(new Particle(runner.x - runner.facing * 10, runner.y + offset, '#ffd93d', 2.5));
+            }
+            // 添加速度线效果
             for (let i = 0; i < 5; i++) {
-                particles.push(new Particle(runner.x, runner.y, '#ffd93d', 2));
+                particles.push(new Particle(runner.x, runner.y, '#ffffff', 3));
             }
         }
         
@@ -675,6 +774,9 @@
             updateTraps();
             updateParticles();
             checkCollisions();
+            
+            // 每帧更新视觉状态
+            if (gameTime % 5 === 0) updateKeyVisuals();
         }
         
         function updateRunner() {
@@ -693,8 +795,9 @@
                 runner.facing = -1;
             }
             
+            // 冲刺时持续消耗体力
             if (runner.isSprinting) {
-                runner.stamina -= runner.staminaCost;
+                runner.stamina -= runner.sprintCost;
                 if (runner.stamina <= 0) {
                     runner.isSprinting = false;
                     runner.stamina = 0;
@@ -742,12 +845,15 @@
                 runner.x = pos.x;
                 runner.y = pos.y;
                 
-                if (gameTime % 2 === 0) {
+                // 冲刺时产生更多轨迹粒子
+                const trailFreq = runner.isSprinting ? 1 : 2;
+                if (gameTime % trailFreq === 0) {
                     runner.trail.push({ 
                         x: runner.x, 
                         y: runner.y, 
-                        life: 15,
-                        color: runner.isSprinting ? '#ffd93d' : runner.color
+                        life: runner.isSprinting ? 20 : 15,
+                        color: runner.isSprinting ? '#ffd93d' : runner.color,
+                        size: runner.isSprinting ? 1.5 : 1
                     });
                 }
             }
@@ -863,7 +969,6 @@
             ctx.stroke();
             ctx.setLineDash([]);
             
-            // 路径点
             pathPoints.forEach((p, i) => {
                 ctx.fillStyle = i === 0 ? '#4ecdc4' : i === pathPoints.length-1 ? '#ffd93d' : 'rgba(255,217,61,0.4)';
                 ctx.beginPath();
@@ -933,41 +1038,57 @@
         function drawRunner() {
             if (runner.invincible > 0 && Math.floor(gameTime/5)%2 === 0) return;
             
+            // 绘制轨迹
             runner.trail.forEach(t => {
+                const alpha = t.life / (t.color === '#ffd93d' ? 20 : 15);
                 ctx.fillStyle = t.color === '#ffd93d' ? 
-                    `rgba(255, 217, 61, ${t.life/15})` : 
-                    `rgba(78, 205, 196, ${t.life/15})`;
+                    `rgba(255, 217, 61, ${alpha})` : 
+                    `rgba(78, 205, 196, ${alpha})`;
                 ctx.beginPath();
-                ctx.arc(t.x, t.y, runner.size * 0.8 * (t.life/15), 0, Math.PI*2);
+                ctx.arc(t.x, t.y, runner.size * 0.8 * (t.life/15) * (t.size || 1), 0, Math.PI*2);
                 ctx.fill();
             });
             
             ctx.save();
             ctx.translate(runner.x, runner.y);
             
+            // 冲刺效果
             if (runner.isSprinting) {
-                ctx.shadowBlur = 30;
+                ctx.shadowBlur = 40;
                 ctx.shadowColor = '#ffd93d';
+                
+                // 速度线
+                ctx.strokeStyle = 'rgba(255, 217, 61, 0.3)';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(-runner.facing * (20 + i * 10), (i - 1) * 8);
+                    ctx.lineTo(-runner.facing * (40 + i * 15), (i - 1) * 8);
+                    ctx.stroke();
+                }
             } else {
                 ctx.shadowBlur = 20;
                 ctx.shadowColor = runner.color;
             }
             
+            // 身体
             ctx.fillStyle = runner.isSprinting ? '#ffd93d' : runner.color;
             ctx.beginPath();
             ctx.arc(0, 0, runner.size, 0, Math.PI*2);
             ctx.fill();
             
+            // 眼睛
             ctx.fillStyle = '#fff';
             ctx.beginPath();
             ctx.arc(runner.facing * 6, -3, 4, 0, Math.PI*2);
             ctx.fill();
             
+            // 冲刺拖尾
             if (runner.isSprinting) {
-                ctx.fillStyle = 'rgba(255, 217, 61, 0.5)';
-                for (let i = 1; i <= 3; i++) {
+                ctx.fillStyle = 'rgba(255, 217, 61, 0.6)';
+                for (let i = 1; i <= 4; i++) {
                     ctx.beginPath();
-                    ctx.arc(-runner.facing * i * 8, 0, runner.size * (1 - i*0.2), 0, Math.PI*2);
+                    ctx.arc(-runner.facing * i * 10, 0, runner.size * (1 - i*0.15), 0, Math.PI*2);
                     ctx.fill();
                 }
             }
@@ -1018,6 +1139,19 @@
             document.getElementById('trapsLeft').textContent = game.trapsLeft;
             const progress = Math.floor((runner.pathIndex + runner.pathPos) / (pathPoints.length - 1) * 100);
             document.getElementById('progress').textContent = Math.min(100, progress);
+            
+            // 体力条
+            const staminaBar = document.getElementById('staminaBar');
+            staminaBar.style.width = runner.stamina + '%';
+            
+            // 体力颜色变化
+            if (runner.stamina < 20) {
+                staminaBar.style.background = 'linear-gradient(90deg, #ff4757, #ff6b6b)';
+            } else if (runner.isSprinting) {
+                staminaBar.style.background = 'linear-gradient(90deg, #ffd93d, #ff6b6b)';
+            } else {
+                staminaBar.style.background = 'linear-gradient(90deg, #ffd93d, #ff6b6b)';
+            }
         }
         
         function updateTrapKeys() {
@@ -1049,6 +1183,8 @@
             runner.trail = [];
             runner.lastKeyTime = 0;
             runner.lastKey = null;
+            runner.keyReleased = true;
+            runner.sprintReady = false;
             
             keys.ArrowLeft = false;
             keys.ArrowRight = false;
