@@ -374,17 +374,36 @@
         e.preventDefault();
       }, { passive: false });
       
-      // 按钮事件 - 使用 pointerdown 更快响应
+      // 按钮事件 - 只使用 touchstart，避免重复触发
       var btnLeft = get('btn-left');
       var btnRight = get('btn-right');
       var btnRotate = get('btn-rotate');
       var btnDown = get('btn-down');
       
-      function addBtnListener(btn, action) {
-        // 触摸
+      // 标记是否已经处理过触摸事件
+      var touchHandled = {};
+      
+      function handleBtnAction(btnId, action) {
+        // 如果已经通过触摸处理过，忽略后续的点击
+        if (touchHandled[btnId]) {
+          touchHandled[btnId] = false;
+          return;
+        }
+        
+        if (playing) {
+          actions.push(action);
+        } else if (action === DIR.UP) {
+          play();
+        }
+      }
+      
+      function addBtnListener(btn, btnId, action) {
+        // 触摸事件 - 优先使用
         btn.addEventListener('touchstart', function(e) {
           e.preventDefault();
           e.stopPropagation();
+          touchHandled[btnId] = true;
+          
           if (playing) {
             actions.push(action);
           } else if (action === DIR.UP) {
@@ -392,21 +411,17 @@
           }
         }, { passive: false });
         
-        // 鼠标/指针
-        btn.addEventListener('pointerdown', function(e) {
+        // 鼠标点击事件 - 作为后备，但检查是否已被触摸处理
+        btn.addEventListener('click', function(e) {
           e.preventDefault();
-          if (playing) {
-            actions.push(action);
-          } else if (action === DIR.UP) {
-            play();
-          }
+          handleBtnAction(btnId, action);
         });
       }
       
-      addBtnListener(btnLeft, DIR.LEFT);
-      addBtnListener(btnRight, DIR.RIGHT);
-      addBtnListener(btnRotate, DIR.UP);
-      addBtnListener(btnDown, DIR.DOWN);
+      addBtnListener(btnLeft, 'left', DIR.LEFT);
+      addBtnListener(btnRight, 'right', DIR.RIGHT);
+      addBtnListener(btnRotate, 'rotate', DIR.UP);
+      addBtnListener(btnDown, 'down', DIR.DOWN);
       
       // 滑动手势 - 在 canvas 上
       var touchStartX = 0;
@@ -417,7 +432,7 @@
       canvas.addEventListener('touchstart', function(e) {
         var now = timestamp();
         // 防止过于频繁的触发
-        if (now - lastTouchTime < 50) return;
+        if (now - lastTouchTime < 100) return;
         lastTouchTime = now;
         
         touchStartX = e.touches[0].clientX;
@@ -440,13 +455,13 @@
         var dt = touchEndTime - touchStartTime;
         
         // 快速点击 = 旋转
-        if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && dt < 250) {
+        if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && dt < 300) {
           actions.push(DIR.UP);
           return;
         }
         
-        // 滑动阈值降低，更灵敏
-        var threshold = 20;
+        // 滑动阈值
+        var threshold = 30;
         
         // 水平滑动
         if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > threshold) {
