@@ -3,76 +3,215 @@
 <head>
   <title>俄罗斯方块 - Tetris</title>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
     body { 
       font-family: Helvetica, sans-serif; 
       background: #1a1a2e; 
       color: #fff; 
       text-align: center;
       margin: 0;
-      padding: 20px;
+      padding: 10px;
+      overflow: hidden;
+      touch-action: none;
     }
+    
     #tetris { 
-      margin: 1em auto; 
-      padding: 1em; 
+      margin: 0 auto; 
+      padding: 10px; 
       border: 4px solid #333; 
       border-radius: 10px; 
       background-color: #16213e; 
       display: inline-block;
+      max-width: 100%;
     }
-    #stats { display: inline-block; vertical-align: top; }
+    
+    #game-area {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 10px;
+    }
+    
     #canvas { 
-      display: inline-block; 
-      vertical-align: top; 
       background: #0f3460;
       box-shadow: 10px 10px 10px rgba(0,0,0,0.5); 
       border: 2px solid #333; 
+      max-width: 100%;
+      height: auto;
     }
+    
+    #side-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    
     #menu { 
-      display: inline-block; 
-      vertical-align: top; 
-      position: relative;
-      padding: 0 20px;
+      background: rgba(0,0,0,0.3);
+      padding: 10px;
+      border-radius: 10px;
+      min-width: 100px;
     }
-    #menu p { margin: 0.5em 0; text-align: center; }
+    
+    #menu p { 
+      margin: 0.5em 0; 
+      text-align: center; 
+      font-size: 0.9em;
+    }
+    
     #menu p a { 
       text-decoration: none; 
       color: #4ecdc4; 
       font-weight: bold;
-      font-size: 1.2em;
+      font-size: 1.1em;
     }
+    
     #upcoming { 
       display: block; 
       margin: 0 auto; 
       background-color: #0f3460;
       border: 2px solid #333;
+      width: 80px;
+      height: 80px;
     }
-    #score { color: #feca57; font-weight: bold; vertical-align: middle; font-size: 1.2em; }
-    #rows { color: #ff6b6b; font-weight: bold; vertical-align: middle; font-size: 1.2em; }
     
-    @media screen and (min-width: 0px) and (min-height: 0px) { 
-      #tetris { font-size: 0.75em; } 
-      #menu { width: 100px; height: 200px; } 
-      #upcoming { width: 50px; height: 50px; } 
-      #canvas { width: 100px; height: 200px; } 
+    #score { color: #feca57; font-weight: bold; font-size: 1.2em; }
+    #rows { color: #ff6b6b; font-weight: bold; font-size: 1.2em; }
+    
+    /* 触屏控制按钮 */
+    #touch-controls {
+      display: none;
+      margin-top: 15px;
+      width: 100%;
+      max-width: 300px;
     }
-    @media screen and (min-width: 400px) and (min-height: 400px) { 
+    
+    .control-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    
+    .control-btn {
+      width: 70px;
+      height: 70px;
+      border: none;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #4ecdc4, #44a3aa);
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: all 0.1s;
+      user-select: none;
+      -webkit-user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .control-btn:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    
+    .control-btn.rotate {
+      background: linear-gradient(145deg, #feca57, #e5b548);
+      width: 80px;
+      height: 80px;
+    }
+    
+    .control-btn.down {
+      background: linear-gradient(145deg, #ff6b6b, #ee5a6f);
+    }
+    
+    /* 手机显示控制按钮 */
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+      }
+      
+      #tetris {
+        padding: 8px;
+        width: 100%;
+        max-width: 400px;
+      }
+      
+      #game-area {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      #side-panel {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-around;
+      }
+      
+      #menu {
+        min-width: auto;
+        flex: 1;
+      }
+      
+      #upcoming {
+        width: 60px;
+        height: 60px;
+      }
+      
+      #touch-controls {
+        display: block;
+      }
+      
+      .control-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 20px;
+      }
+      
+      .control-btn.rotate {
+        width: 70px;
+        height: 70px;
+      }
+    }
+    
+    /* 小屏幕适配 */
+    @media (max-width: 400px) {
+      #menu p {
+        font-size: 0.8em;
+        margin: 0.3em 0;
+      }
+      
+      #score, #rows {
+        font-size: 1em;
+      }
+      
+      .control-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 18px;
+      }
+      
+      .control-btn.rotate {
+        width: 65px;
+        height: 65px;
+      }
+    }
+    
+    /* 桌面端尺寸 */
+    @media screen and (min-width: 769px) { 
       #tetris { font-size: 1.00em; } 
-      #menu { width: 150px; height: 300px; } 
-      #upcoming { width: 75px; height: 75px; } 
-      #canvas { width: 150px; height: 300px; } 
-    }
-    @media screen and (min-width: 500px) and (min-height: 500px) { 
-      #tetris { font-size: 1.25em; } 
-      #menu { width: 200px; height: 400px; } 
-      #upcoming { width: 100px; height: 100px; } 
-      #canvas { width: 200px; height: 400px; } 
-    }
-    @media screen and (min-width: 600px) and (min-height: 600px) { 
-      #tetris { font-size: 1.50em; } 
-      #menu { width: 250px; height: 500px; } 
-      #upcoming { width: 125px; height: 125px; } 
-      #canvas { width: 250px; height: 500px; } 
+      #canvas { width: 300px; height: 600px; } 
     }
   </style>
 </head>
@@ -80,30 +219,47 @@
 <body>
 
   <div id="tetris">
-    <div id="menu">
-      <p id="start"><a href="javascript:play();">按空格键开始游戏</a></p>
-      <p>下一个</p>
-      <p><canvas id="upcoming"></canvas></p>
-      <p>得分 <span id="score">00000</span></p>
-      <p>行数 <span id="rows">0</span></p>
-      <p style="font-size: 0.8em; color: #888; margin-top: 20px;">
-        ← → 移动<br>
-        ↑ 旋转<br>
-        ↓ 加速<br>
-        空格 开始
-      </p>
+    <div id="game-area">
+      <div id="side-panel">
+        <div id="menu">
+          <p id="start"><a href="javascript:play();">按空格或点开始</a></p>
+          <p>下一个</p>
+          <p><canvas id="upcoming" width="80" height="80"></canvas></p>
+          <p>得分<br><span id="score">00000</span></p>
+          <p>行数<br><span id="rows">0</span></p>
+        </div>
+      </div>
+      
+      <canvas id="canvas" width="300" height="600">
+        您的浏览器不支持 Canvas，请使用现代浏览器
+      </canvas>
     </div>
-    <canvas id="canvas">
-      您的浏览器不支持 Canvas，请使用现代浏览器
-    </canvas>
+    
+    <!-- 触屏控制按钮 -->
+    <div id="touch-controls">
+      <div class="control-row">
+        <button class="control-btn rotate" id="btn-rotate" title="旋转">↻</button>
+      </div>
+      <div class="control-row">
+        <button class="control-btn" id="btn-left" title="左移">←</button>
+        <button class="control-btn down" id="btn-down" title="加速下落">↓</button>
+        <button class="control-btn" id="btn-right" title="右移">→</button>
+      </div>
+    </div>
+    
+    <p style="font-size: 0.8em; color: #888; margin-top: 10px;">
+      电脑：方向键移动，上键旋转，空格开始 | 手机：点击下方按钮
+    </p>
   </div>
 
   <script>
     //=============================================================================
-    // Javascript Tetris
+    // Javascript Tetris - Mobile Version
     // Copyright (c) 2011 Jake Gordon
     // Licensed under MIT License
     // https://github.com/jakesgordon/javascript-tetris
+    // 
+    // Modified for mobile touch support
     //=============================================================================
 
     function get(id) { return document.getElementById(id); }
@@ -169,6 +325,7 @@
 
     function run() {
       addEvents();
+      addTouchEvents();
       var last = now = timestamp();
       function frame() {
         now = timestamp();
@@ -187,11 +344,123 @@
       window.addEventListener('resize', resize, false);
     }
 
+    // 添加触屏事件
+    function addTouchEvents() {
+      // 防止双击缩放
+      document.addEventListener('touchstart', function(e) {
+        if (e.target.tagName === 'BUTTON') {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      
+      // 防止页面滚动
+      document.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+      }, { passive: false });
+      
+      // 按钮控制
+      get('btn-left').addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        if (playing) actions.push(DIR.LEFT);
+      });
+      
+      get('btn-left').addEventListener('click', function(e) {
+        e.preventDefault();
+        if (playing) actions.push(DIR.LEFT);
+      });
+      
+      get('btn-right').addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        if (playing) actions.push(DIR.RIGHT);
+      });
+      
+      get('btn-right').addEventListener('click', function(e) {
+        e.preventDefault();
+        if (playing) actions.push(DIR.RIGHT);
+      });
+      
+      get('btn-rotate').addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        if (playing) actions.push(DIR.UP);
+        else play();
+      });
+      
+      get('btn-rotate').addEventListener('click', function(e) {
+        e.preventDefault();
+        if (playing) actions.push(DIR.UP);
+        else play();
+      });
+      
+      get('btn-down').addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        if (playing) actions.push(DIR.DOWN);
+      });
+      
+      get('btn-down').addEventListener('click', function(e) {
+        e.preventDefault();
+        if (playing) actions.push(DIR.DOWN);
+      });
+      
+      // 滑动手势支持
+      var touchStartX = 0;
+      var touchStartY = 0;
+      var touchStartTime = 0;
+      
+      canvas.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchStartTime = timestamp();
+      }, { passive: true });
+      
+      canvas.addEventListener('touchend', function(e) {
+        if (!playing) {
+          play();
+          return;
+        }
+        
+        var touchEndX = e.changedTouches[0].clientX;
+        var touchEndY = e.changedTouches[0].clientY;
+        var touchEndTime = timestamp();
+        
+        var dx = touchEndX - touchStartX;
+        var dy = touchEndY - touchStartY;
+        var dt = touchEndTime - touchStartTime;
+        
+        // 快速点击 = 旋转
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && dt < 200) {
+          actions.push(DIR.UP);
+          return;
+        }
+        
+        // 水平滑动
+        if (Math.abs(dx) > Math.abs(dy)) {
+          if (dx > 30) actions.push(DIR.RIGHT);
+          else if (dx < -30) actions.push(DIR.LEFT);
+        }
+        // 垂直滑动
+        else {
+          if (dy > 30) actions.push(DIR.DOWN);
+        }
+      }, { passive: true });
+    }
+
     function resize() {
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
-      ucanvas.width = ucanvas.clientWidth;
-      ucanvas.height = ucanvas.clientHeight;
+      // 根据屏幕大小调整 canvas
+      var maxWidth = window.innerWidth - 40;
+      var maxHeight = window.innerHeight - 300;
+      
+      if (window.innerWidth < 768) {
+        // 手机端：自适应宽度
+        var size = Math.min(maxWidth, 300);
+        canvas.style.width = size + 'px';
+        canvas.style.height = (size * 2) + 'px';
+      }
+      
+      canvas.width = 300;
+      canvas.height = 600;
+      ucanvas.width = 80;
+      ucanvas.height = 80;
+      
       dx = canvas.width / nx;
       dy = canvas.height / ny;
       invalidate();
