@@ -174,14 +174,14 @@
                 x: x,
                 y: y,
                 width: 30,
-                height: 50, // 更高的人形
+                height: 50,
                 normalHeight: 50,
-                crouchHeight: 30, // 下蹲时高度
+                crouchHeight: 30,
                 color: color,
                 vx: 0,
                 vy: 0,
                 speed: 5,
-                crouchSpeed: 2.5, // 下蹲时移动速度减半
+                crouchSpeed: 2.5,
                 jumpPower: -12,
                 hp: 6,
                 maxHp: 6,
@@ -196,9 +196,9 @@
                 swordLength: 5,
                 onPlatform: false,
                 jumpBoosted: false,
-                crouching: false, // 是否下蹲
+                crouching: false,
                 crouchKeyHeld: false,
-                animTimer: 0 // 动画计时器
+                animTimer: 0
             };
         }
         
@@ -230,7 +230,7 @@
         
         // 红色玩家攻击
         function player1Attack(type) {
-            if (player1.attacking || player1.crouching) return; // 下蹲时不能攻击
+            if (player1.attacking || player1.crouching) return;
             
             if (type === 'bow' && player1.arrowsLeft <= 0) return;
             
@@ -254,7 +254,7 @@
         
         // 蓝色玩家攻击
         function player2Attack(type) {
-            if (player2.attacking || player2.crouching) return; // 下蹲时不能攻击
+            if (player2.attacking || player2.crouching) return;
             
             if (type === 'bow' && player2.arrowsLeft <= 0) return;
             
@@ -314,15 +314,13 @@
                 if (!p.crouching) {
                     p.crouching = true;
                     p.height = p.crouchHeight;
-                    p.y += (p.normalHeight - p.crouchHeight); // 调整位置避免悬空
+                    p.y += (p.normalHeight - p.crouchHeight);
                 }
             } else {
-                // 尝试站起（检查头顶是否有空间）
                 if (p.crouching) {
                     let canStand = true;
                     let standHeight = p.normalHeight - p.crouchHeight;
                     
-                    // 检查上方平台
                     platforms.forEach(plat => {
                         if (plat.type === 'platform' && 
                             p.x < plat.x + plat.width && 
@@ -354,7 +352,7 @@
                 p.vx *= 0.8;
             }
             
-            // 跳跃（下蹲时不能跳）
+            // 跳跃
             if (input.jump && !p.jumpKeyHeld && !p.crouching) {
                 if (p.onGround || p.onPlatform) {
                     p.vy = p.jumpPower;
@@ -439,7 +437,6 @@
                 arrow.x += arrow.vx;
                 arrow.y += arrow.vy;
                 
-                // 平台碰撞
                 let hitPlatform = false;
                 platforms.forEach(plat => {
                     if (arrow.x > plat.x && arrow.x < plat.x + plat.width &&
@@ -448,7 +445,6 @@
                     }
                 });
                 
-                // 击中玩家
                 let target = arrow.owner === 1 ? player2 : player1;
                 if (!hitPlatform && 
                     arrow.x > target.x && arrow.x < target.x + target.width &&
@@ -477,7 +473,6 @@
             const swordLength = 50;
             const swordWidth = 12;
             
-            // 根据是否下蹲调整攻击高度
             let attackY = attacker.crouching ? attacker.y + 5 : attacker.y + 15;
             let attackX = attacker.facing === 1 ? attacker.x + attacker.width : attacker.x - swordLength;
             
@@ -499,7 +494,6 @@
             ctx.fillStyle = '#0f3460';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 背景装饰
             ctx.fillStyle = 'rgba(255,255,255,0.05)';
             for(let i=0; i<10; i++) {
                 ctx.fillRect(i*150, 100 + Math.sin(i)*50, 80, 80);
@@ -579,7 +573,6 @@
         function drawHumanPlayer(p) {
             ctx.save();
             
-            // 无敌闪烁
             if (p.invincible > 0 && Math.floor(p.invincible / 5) % 2 === 0) {
                 ctx.globalAlpha = 0.5;
             }
@@ -589,48 +582,43 @@
             const isCrouching = p.crouching;
             const height = p.height;
             
-            // 身体比例
             const headSize = 12;
             const bodyWidth = 16;
             const bodyHeight = isCrouching ? height * 0.4 : height * 0.35;
             const legWidth = 6;
             const legHeight = isCrouching ? height * 0.3 : height * 0.4;
             
-            // 颜色
             const mainColor = p.color;
             const darkColor = p.color === '#e74c3c' ? '#c0392b' : '#2980b9';
             const skinColor = '#f1c40f';
             
-            // 腿部动画
             let legOffset = 0;
             if (Math.abs(p.vx) > 0.5 && (p.onGround || p.onPlatform)) {
                 legOffset = Math.sin(p.animTimer * 0.3) * 3;
             }
             
-            // 绘制后腿
+            // 腿部
             ctx.fillStyle = darkColor;
             if (isCrouching) {
-                // 下蹲时腿弯曲
                 ctx.fillRect(centerX - 8, bottomY - 15, 6, 10);
                 ctx.fillRect(centerX + 2, bottomY - 15, 6, 10);
                 ctx.fillRect(centerX - 8, bottomY - 5, 6, 5);
                 ctx.fillRect(centerX + 2, bottomY - 5, 6, 5);
             } else {
-                // 站立/行走时腿
                 ctx.fillRect(centerX - 8 + legOffset, bottomY - legHeight, legWidth, legHeight);
                 ctx.fillRect(centerX + 2 - legOffset, bottomY - legHeight, legWidth, legHeight);
             }
             
-            // 绘制身体
+            // 身体
             ctx.fillStyle = mainColor;
             const bodyY = bottomY - legHeight - bodyHeight;
             ctx.fillRect(centerX - bodyWidth/2, bodyY, bodyWidth, bodyHeight);
             
-            // 身体细节 - 腰带
+            // 腰带
             ctx.fillStyle = '#2c3e50';
             ctx.fillRect(centerX - bodyWidth/2, bodyY + bodyHeight - 5, bodyWidth, 5);
             
-            // 绘制头部
+            // 头部
             const headY = bodyY - headSize;
             ctx.fillStyle = skinColor;
             ctx.fillRect(centerX - headSize/2, headY, headSize, headSize);
@@ -652,7 +640,6 @@
             const armY = bodyY + 5;
             
             if (p.attacking && p.attackType === 'sword') {
-                // 挥剑动画
                 ctx.save();
                 ctx.translate(centerX, armY + 10);
                 
@@ -663,20 +650,18 @@
                 
                 ctx.rotate(angle);
                 
-                // 手臂
                 ctx.fillStyle = skinColor;
                 ctx.fillRect(0, -3, 15, 6);
                 
-                // 剑
                 const swordLength = 50;
                 ctx.fillStyle = '#8b4513';
-                ctx.fillRect(12, -4, 10, 8); // 剑柄
+                ctx.fillRect(12, -4, 10, 8);
                 ctx.fillStyle = '#f1c40f';
-                ctx.fillRect(20, -6, 4, 12); // 护手
+                ctx.fillRect(20, -6, 4, 12);
                 ctx.fillStyle = '#bdc3c7';
-                ctx.fillRect(22, -3, swordLength, 6); // 剑刃
+                ctx.fillRect(22, -3, swordLength, 6);
                 ctx.fillStyle = '#ecf0f1';
-                ctx.fillRect(22, -1, swordLength, 2); // 剑刃高光
+                ctx.fillRect(22, -1, swordLength, 2);
                 ctx.fillStyle = '#95a5a6';
                 ctx.beginPath();
                 ctx.moveTo(22 + swordLength, -3);
@@ -686,7 +671,6 @@
                 
                 ctx.restore();
             } else {
-                // 持剑姿势
                 ctx.fillStyle = skinColor;
                 if (p.facing === 1) {
                     ctx.fillRect(centerX, armY, 12, 5);
@@ -696,7 +680,6 @@
                     ctx.fillRect(centerX - 15, armY - 2, 5, 10);
                 }
                 
-                // 背着的剑
                 ctx.save();
                 ctx.translate(centerX + (p.facing === 1 ? -8 : 8), bodyY + 5);
                 ctx.rotate(p.facing === 1 ? -0.3 : 0.3);
@@ -711,7 +694,7 @@
                 ctx.restore();
             }
             
-            // 弓（背在身后）
+            // 弓
             if (!p.attacking || p.attackType !== 'bow') {
                 ctx.strokeStyle = '#8b4513';
                 ctx.lineWidth = 2;
@@ -733,7 +716,6 @@
                 }
             }
             
-            // 下蹲指示
             if (isCrouching) {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.fillRect(p.x, p.y, p.width, p.height);
@@ -742,21 +724,17 @@
             ctx.restore();
         }
         
-        // 更新生命显示
         function updateHP() {
             document.getElementById('red-hp').textContent = '❤️'.repeat(player1.hp) + '🖤'.repeat(player1.maxHp-player1.hp);
             document.getElementById('blue-hp').textContent = '❤️'.repeat(player2.hp) + '🖤'.repeat(player2.maxHp-player2.hp);
         }
         
-        // 更新弹药显示
         function updateAmmo() {
             document.getElementById('red-arrows').textContent = player1.arrowsLeft;
             document.getElementById('blue-arrows').textContent = player2.arrowsLeft;
         }
         
-        // 检查胜利
         function checkWin() {
-            // 先检查剑攻击
             checkSwordHit(player1, player2);
             checkSwordHit(player2, player1);
             
@@ -767,14 +745,12 @@
             }
         }
         
-        // 游戏结束
         function endGame(winnerText) {
             gameRunning = false;
             document.getElementById('winner').textContent = winnerText;
             document.getElementById('gameOver').style.display = 'block';
         }
         
-        // 重置游戏
         function resetGame() {
             Object.assign(player1, createPlayer(150, groundY - 50, '#e74c3c', 1));
             Object.assign(player2, createPlayer(1050, groundY - 50, '#3498db', -1));
@@ -786,7 +762,6 @@
             updateAmmo();
         }
         
-        // 游戏循环
         function gameLoop() {
             update();
             draw();
