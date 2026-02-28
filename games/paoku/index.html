@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>陷阱对决 - 双人跑酷</title>
+    <title>陷阱对决 - 策略跑酷</title>
     <style>
         * {
             margin: 0;
@@ -12,7 +12,7 @@
         }
         
         body {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
             font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
@@ -23,22 +23,23 @@
         }
         
         h1 {
-            margin: 20px 0;
-            text-shadow: 0 0 20px rgba(255,255,255,0.5);
-            font-size: 2.5em;
-            letter-spacing: 2px;
+            margin: 15px 0;
+            text-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
+            font-size: 2.2em;
+            letter-spacing: 3px;
         }
         
         #gameContainer {
             position: relative;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            border-radius: 10px;
+            box-shadow: 0 0 60px rgba(0,0,0,0.6);
+            border-radius: 12px;
             overflow: hidden;
+            border: 3px solid #2d3561;
         }
         
         canvas {
             display: block;
-            background: #0a0a0a;
+            background: #0a0a1a;
         }
         
         #ui {
@@ -51,45 +52,162 @@
             pointer-events: none;
             font-size: 18px;
             font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
         }
         
         .trap-indicator {
-            color: #ff4444;
+            color: #ff6b6b;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 20px;
+            border-radius: 25px;
+            border: 2px solid #ff6b6b;
         }
         
-        .health-indicator {
-            color: #44ff44;
+        .progress-indicator {
+            color: #4ecdc4;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 20px;
+            border-radius: 25px;
+            border: 2px solid #4ecdc4;
+        }
+        
+        .stamina-bar {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 10px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .stamina-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd93d, #ff6b6b);
+            width: 100%;
+            transition: width 0.1s;
         }
         
         #controls {
-            margin-top: 20px;
+            margin-top: 15px;
             display: flex;
-            gap: 40px;
-            background: rgba(0,0,0,0.3);
+            gap: 30px;
+            background: rgba(0,0,0,0.5);
             padding: 20px;
-            border-radius: 15px;
+            border-radius: 20px;
             backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         
         .control-group {
             text-align: center;
+            padding: 15px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .control-group.escape {
+            border: 2px solid #4ecdc4;
+        }
+        
+        .control-group.saboteur {
+            border: 2px solid #ff6b6b;
         }
         
         .control-group h3 {
-            margin-bottom: 10px;
-            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .control-group.escape h3 { color: #4ecdc4; }
+        .control-group.saboteur h3 { color: #ff6b6b; }
+        
+        .key-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 5px 0;
         }
         
         .key {
-            display: inline-block;
-            background: rgba(255,255,255,0.2);
-            padding: 5px 10px;
-            margin: 2px;
-            border-radius: 5px;
-            border: 1px solid rgba(255,255,255,0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(145deg, #3a3a5c, #2a2a4c);
+            border: 2px solid #4a4a7c;
+            border-radius: 8px;
             font-family: monospace;
             font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 0 #1a1a3e;
+            transition: all 0.1s;
+        }
+        
+        .key.active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #1a1a3e;
+            background: linear-gradient(145deg, #4ecdc4, #3dbdb4);
+            border-color: #4ecdc4;
+            color: #000;
+        }
+        
+        .trap-keys {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+        
+        .trap-key {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(145deg, #ff6b6b, #ee5a5a);
+            border: 2px solid #ff4757;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 0 #c44569;
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+        
+        .trap-key:active, .trap-key.pressed {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #c44569;
+        }
+        
+        .trap-key.used {
+            background: linear-gradient(145deg, #444, #333);
+            border-color: #555;
+            box-shadow: none;
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .trap-key.active-trap {
+            animation: pulse 0.5s infinite;
+            background: linear-gradient(145deg, #ffd93d, #ff6b6b);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 10px #ffd93d; }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px #ffd93d; }
+        }
+        
+        .hint {
+            margin-top: 10px;
+            font-size: 12px;
+            opacity: 0.8;
+            color: #ffd93d;
         }
         
         #gameOver {
@@ -97,44 +215,64 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9);
-            padding: 40px;
-            border-radius: 20px;
+            background: rgba(10,10,30,0.95);
+            padding: 50px;
+            border-radius: 25px;
             text-align: center;
             display: none;
-            border: 2px solid #ffd700;
-            box-shadow: 0 0 30px rgba(255,215,0,0.5);
+            border: 3px solid;
+            box-shadow: 0 0 60px rgba(0,0,0,0.9);
+            z-index: 100;
+            min-width: 400px;
         }
         
         #gameOver h2 {
-            font-size: 3em;
+            font-size: 3.5em;
             margin-bottom: 20px;
-            color: #ffd700;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px currentColor; }
+            50% { text-shadow: 0 0 40px currentColor, 0 0 60px currentColor; }
         }
         
         button {
-            padding: 15px 30px;
-            font-size: 18px;
-            background: #4CAF50;
+            padding: 18px 50px;
+            font-size: 22px;
+            background: linear-gradient(145deg, #4ecdc4, #44a3aa);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 25px;
             transition: all 0.3s;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            box-shadow: 0 6px 0 #2a8a8a;
         }
         
         button:hover {
-            background: #45a049;
-            transform: scale(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #2a8a8a, 0 0 30px rgba(78,205,196,0.4);
+        }
+        
+        button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #2a8a8a;
         }
         
         .winner-escape {
-            color: #44ff44 !important;
+            color: #4ecdc4 !important;
+            border-color: #4ecdc4 !important;
         }
         
         .winner-saboteur {
-            color: #ff4444 !important;
+            color: #ff6b6b !important;
+            border-color: #ff6b6b !important;
         }
         
         #startScreen {
@@ -143,95 +281,166 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.85);
+            background: rgba(10,10,30,0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 10;
+            backdrop-filter: blur(10px);
         }
         
         #startScreen h2 {
-            font-size: 2em;
+            font-size: 2.8em;
             margin-bottom: 30px;
-            color: #ffd700;
+            color: #ffd93d;
+            text-shadow: 0 0 30px rgba(255,217,61,0.6);
         }
         
         .role-desc {
             display: flex;
-            gap: 50px;
+            gap: 40px;
             margin-bottom: 30px;
         }
         
         .role {
-            background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 300px;
-            border: 2px solid;
+            background: rgba(255,255,255,0.03);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 380px;
+            border: 3px solid;
+            transition: all 0.3s;
         }
         
-        .role.escape {
-            border-color: #44ff44;
+        .role:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
         
-        .role.saboteur {
-            border-color: #ff4444;
-        }
+        .role.escape { border-color: #4ecdc4; }
+        .role.saboteur { border-color: #ff6b6b; }
         
         .role h3 {
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .role.escape h3 { color: #4ecdc4; }
+        .role.saboteur h3 { color: #ff6b6b; }
+        
+        .role ul {
+            list-style: none;
+            text-align: left;
+        }
+        
+        .role li {
+            margin: 12px 0;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.6;
+        }
+        
+        .role li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #ffd93d;
+            font-weight: bold;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+        
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
         }
     </style>
+<base target="_blank">
 </head>
 <body>
-    <h1>🏃 陷阱对决 🕸️</h1>
+    <h1>⚡ 陷阱对决 - 策略跑酷 ⚡</h1>
     
     <div id="gameContainer">
         <canvas id="gameCanvas" width="1000" height="600"></canvas>
         
         <div id="ui">
-            <div class="trap-indicator">陷阱剩余: <span id="trapCount">10</span></div>
-            <div class="health-indicator">逃跑者生命: <span id="health">❤️❤️❤️</span></div>
+            <div class="trap-indicator">🕸️ 陷阱: <span id="trapsLeft">10</span>/10</div>
+            <div class="progress-indicator">🏃 进度: <span id="progress">0</span>%</div>
+        </div>
+        
+        <div class="stamina-bar">
+            <div class="stamina-fill" id="staminaBar"></div>
         </div>
         
         <div id="startScreen">
-            <h2>选择你的阵营</h2>
+            <h2>🎮 选择你的角色</h2>
             <div class="role-desc">
                 <div class="role escape">
-                    <h3>🏃 逃跑者 (WASD)</h3>
-                    <p>从左侧起点到达右侧终点</p>
-                    <p>避开所有移动陷阱</p>
-                    <p>中陷阱即重生，3次机会</p>
+                    <h3>🏃 逃跑者</h3>
+                    <ul>
+                        <li>沿黄色路线移动（不能偏离）</li>
+                        <li><strong>← →</strong> 控制前进后退</li>
+                        <li><strong>双击方向键</strong> 冲刺（消耗体力）</li>
+                        <li>可以暂停观察陷阱时机</li>
+                        <li>到达终点即可获胜</li>
+                    </ul>
                 </div>
                 <div class="role saboteur">
-                    <h3>🕸️ 破坏者 (方向键)</h3>
-                    <p>使用方向键激活陷阱</p>
-                    <p>陷阱会向对应方向移动</p>
-                    <p>阻止逃跑者到达终点</p>
-                    <p>只有10个陷阱可用！</p>
+                    <h3>🕸️ 破坏者</h3>
+                    <ul>
+                        <li>按 <strong>1-10</strong> 激活对应陷阱</li>
+                        <li>每个陷阱只能使用一次</li>
+                        <li>预判逃跑者位置，把握时机</li>
+                        <li>中陷阱会重生回起点</li>
+                        <li>阻止到达终点即可获胜</li>
+                    </ul>
                 </div>
             </div>
-            <button onclick="startGame()">开始游戏</button>
+            <button onclick="startGame()" style="font-size: 24px; padding: 20px 60px;">开始对决</button>
         </div>
         
         <div id="gameOver">
             <h2 id="winnerText"></h2>
-            <p id="winnerDesc"></p>
+            <div class="stats" id="finalStats"></div>
             <button onclick="resetGame()">再来一局</button>
         </div>
     </div>
     
     <div id="controls">
-        <div class="control-group">
+        <div class="control-group escape">
             <h3>🏃 逃跑者控制</h3>
-            <div><span class="key">W</span> 上</div>
-            <div><span class="key">A</span> 左 <span class="key">S</span> 下 <span class="key">D</span> 右</div>
+            <div class="key-row">
+                <div class="key" id="keyLeft">←</div>
+                <div class="key" id="keyRight">→</div>
+            </div>
+            <div class="hint">双击冲刺 ⚡ | 长按移动 | 松手暂停</div>
         </div>
-        <div class="control-group">
+        
+        <div class="control-group saboteur">
             <h3>🕸️ 破坏者控制</h3>
-            <div><span class="key">↑</span> 上</div>
-            <div><span class="key">←</span> 左 <span class="key">↓</span> 下 <span class="key">→</span> 右</div>
+            <div class="trap-keys" id="trapKeys">
+                <div class="trap-key" data-trap="1">1</div>
+                <div class="trap-key" data-trap="2">2</div>
+                <div class="trap-key" data-trap="3">3</div>
+                <div class="trap-key" data-trap="4">4</div>
+                <div class="trap-key" data-trap="5">5</div>
+                <div class="trap-key" data-trap="6">6</div>
+                <div class="trap-key" data-trap="7">7</div>
+                <div class="trap-key" data-trap="8">8</div>
+                <div class="trap-key" data-trap="9">9</div>
+                <div class="trap-key" data-trap="10">10</div>
+            </div>
+            <div class="hint">数字键激活陷阱 ⚠️ 只能用一次</div>
         </div>
     </div>
 
@@ -242,14 +451,13 @@
         // 游戏状态
         let gameRunning = false;
         let animationId;
+        let gameTime = 0;
         
-        // 游戏对象
+        // 游戏配置
         const game = {
             width: 1000,
             height: 600,
-            gridSize: 40,
             trapsLeft: 10,
-            lives: 3,
             winner: null
         };
         
@@ -257,77 +465,95 @@
         const runner = {
             x: 50,
             y: 300,
-            size: 20,
-            speed: 5,
-            color: '#44ff44',
-            keys: { w: false, a: false, s: false, d: false },
+            size: 18,
+            color: '#4ecdc4',
+            pathIndex: 0,
+            pathPos: 0,
+            facing: 1,
+            speed: 0,
+            baseSpeed: 3,
+            sprintSpeed: 8,
+            isSprinting: false,
+            stamina: 100,
+            maxStamina: 100,
+            staminaRegen: 0.5,
+            staminaCost: 2,
+            invincible: 0,
+            respawnCount: 0,
             trail: [],
-            invincible: 0
+            lastKeyTime: 0,
+            lastKey: null,
+            doubleClickThreshold: 300
         };
         
-        // 破坏者控制
-        const saboteur = {
-            keys: { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false }
-        };
+        // 固定路径点 - 重新设计让陷阱能均匀分布
+        const pathPoints = [
+            { x: 50, y: 300 },      // 0: 起点
+            { x: 150, y: 300 },     // 1
+            { x: 250, y: 300 },     // 2: 1号陷阱区域
+            { x: 350, y: 450 },     // 3: 下降
+            { x: 450, y: 450 },     // 4: 2-3号陷阱区域
+            { x: 550, y: 450 },     // 5
+            { x: 650, y: 300 },     // 6: 上升 4-5号陷阱区域
+            { x: 750, y: 300 },     // 7
+            { x: 850, y: 150 },     // 8: 上升到高处 6-7号陷阱区域
+            { x: 900, y: 150 },     // 9
+            { x: 950, y: 350 }      // 10: 下降到终点 8-9-10号陷阱区域
+        ];
         
-        // 关卡设计
-        let platforms = [];
+        // 陷阱 - 全部重新定位到路线上
         let traps = [];
-        let particles = [];
         
-        // 初始化关卡
-        function initLevel() {
-            platforms = [];
-            traps = [];
-            
-            // 地面
-            platforms.push({ x: 0, y: 550, w: 1000, h: 50, type: 'floor' });
-            
-            // 起点平台
-            platforms.push({ x: 0, y: 400, w: 200, h: 20, type: 'platform' });
-            
-            // 中间平台群
-            platforms.push({ x: 250, y: 450, w: 150, h: 20, type: 'platform' });
-            platforms.push({ x: 450, y: 350, w: 100, h: 20, type: 'platform' });
-            platforms.push({ x: 600, y: 250, w: 150, h: 20, type: 'platform' });
-            platforms.push({ x: 350, y: 200, w: 100, h: 20, type: 'platform' });
-            platforms.push({ x: 750, y: 400, w: 150, h: 20, type: 'platform' });
-            platforms.push({ x: 800, y: 150, w: 100, h: 20, type: 'platform' });
-            
-            // 终点平台
-            platforms.push({ x: 900, y: 300, w: 100, h: 20, type: 'finish' });
-            
-            // 初始化陷阱位置（静态，等待激活）
+        function initTraps() {
             traps = [
-                { x: 300, y: 430, w: 30, h: 20, originalX: 300, originalY: 430, active: false, direction: null, moveTimer: 0 },
-                { x: 500, y: 330, w: 30, h: 20, originalX: 500, originalY: 330, active: false, direction: null, moveTimer: 0 },
-                { x: 650, y: 230, w: 30, h: 20, originalX: 650, originalY: 230, active: false, direction: null, moveTimer: 0 },
-                { x: 400, y: 180, w: 30, h: 20, originalX: 400, originalY: 180, active: false, direction: null, moveTimer: 0 },
-                { x: 800, y: 380, w: 30, h: 20, originalX: 800, originalY: 380, active: false, direction: null, moveTimer: 0 },
-                { x: 850, y: 130, w: 30, h: 20, originalX: 850, originalY: 130, active: false, direction: null, moveTimer: 0 },
-                { x: 550, y: 530, w: 40, h: 20, originalX: 550, originalY: 530, active: false, direction: null, moveTimer: 0 },
-                { x: 200, y: 380, w: 30, h: 20, originalX: 200, originalY: 380, active: false, direction: null, moveTimer: 0 },
-                { x: 700, y: 480, w: 30, h: 20, originalX: 700, originalY: 480, active: false, direction: null, moveTimer: 0 },
-                { x: 150, y: 250, w: 30, h: 20, originalX: 150, originalY: 250, active: false, direction: null, moveTimer: 0 }
+                // 第一段直路 (起点后)
+                { id: 1, x: 200, y: 280, w: 40, h: 40, used: false, active: false, timer: 0, origY: 280 },
+                
+                // 低处平台段
+                { id: 2, x: 380, y: 430, w: 40, h: 40, used: false, active: false, timer: 0, origY: 430 },
+                { id: 3, x: 480, y: 430, w: 40, h: 40, used: false, active: false, timer: 0, origY: 430 },
+                
+                // 中段上升
+                { id: 4, x: 600, y: 280, w: 40, h: 40, used: false, active: false, timer: 0, origY: 280 },
+                { id: 5, x: 700, y: 280, w: 40, h: 40, used: false, active: false, timer: 0, origY: 280 },
+                
+                // 高处
+                { id: 6, x: 800, y: 130, w: 40, h: 40, used: false, active: false, timer: 0, origY: 130 },
+                { id: 7, x: 870, y: 130, w: 40, h: 40, used: false, active: false, timer: 0, origY: 130 },
+                
+                // 终点前下降段 - 8、9、10号密集防守
+                { id: 8, x: 900, y: 250, w: 40, h: 40, used: false, active: false, timer: 0, origY: 250 },
+                { id: 9, x: 920, y: 330, w: 40, h: 40, used: false, active: false, timer: 0, origY: 330 },
+                { id: 10, x: 940, y: 380, w: 40, h: 40, used: false, active: false, timer: 0, origY: 380 }
             ];
         }
         
-        // 粒子效果
+        // 平台（视觉）
+        const platforms = [
+            { x: 0, y: 320, w: 300, h: 15 },      // 起点平台
+            { x: 300, y: 470, w: 300, h: 15 },    // 低平台
+            { x: 600, y: 320, w: 200, h: 15 },    // 中平台
+            { x: 800, y: 170, w: 150, h: 15 },    // 高平台
+            { x: 900, y: 370, w: 100, h: 15 }     // 终点平台
+        ];
+        
+        // 粒子
+        let particles = [];
+        
         class Particle {
-            constructor(x, y, color) {
+            constructor(x, y, color, speed = 1) {
                 this.x = x;
                 this.y = y;
-                this.vx = (Math.random() - 0.5) * 10;
-                this.vy = (Math.random() - 0.5) * 10;
+                this.vx = (Math.random() - 0.5) * 8 * speed;
+                this.vy = (Math.random() - 0.5) * 8 * speed;
                 this.life = 30;
                 this.color = color;
-                this.size = Math.random() * 5 + 2;
+                this.size = Math.random() * 4 + 2;
             }
             
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-                this.vy += 0.5; // 重力
                 this.life--;
                 this.size *= 0.95;
             }
@@ -343,136 +569,221 @@
             }
         }
         
-        function createExplosion(x, y, color, count = 20) {
+        // 输入处理
+        const keys = {
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+        
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+            
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                const now = Date.now();
+                const isDouble = (now - runner.lastKeyTime < runner.doubleClickThreshold) && 
+                                (runner.lastKey === e.key);
+                
+                keys[e.key] = true;
+                
+                if (isDouble && runner.stamina > 30) {
+                    runner.isSprinting = true;
+                    runner.stamina -= 30;
+                    createSprintEffect();
+                }
+                
+                runner.lastKeyTime = now;
+                runner.lastKey = e.key;
+                
+                updateKeyVisuals();
+            }
+            
+            if (e.key >= '0' && e.key <= '9') {
+                const trapNum = e.key === '0' ? 10 : parseInt(e.key);
+                activateTrap(trapNum);
+                updateTrapKeyVisual(trapNum, true);
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                keys[e.key] = false;
+                runner.isSprinting = false;
+                updateKeyVisuals();
+            }
+            if (e.key >= '0' && e.key <= '9') {
+                const trapNum = e.key === '0' ? 10 : parseInt(e.key);
+                updateTrapKeyVisual(trapNum, false);
+            }
+        });
+        
+        function updateKeyVisuals() {
+            document.getElementById('keyLeft').classList.toggle('active', keys.ArrowLeft);
+            document.getElementById('keyRight').classList.toggle('active', keys.ArrowRight);
+        }
+        
+        function updateTrapKeyVisual(num, pressed) {
+            const key = document.querySelector(`.trap-key[data-trap="${num}"]`);
+            if (key && !key.classList.contains('used')) {
+                key.classList.toggle('pressed', pressed);
+            }
+        }
+        
+        function activateTrap(num) {
+            const trap = traps.find(t => t.id === num);
+            if (!trap || trap.used) return;
+            
+            trap.used = true;
+            trap.active = true;
+            trap.timer = 90;
+            game.trapsLeft--;
+            
+            createExplosion(trap.x + trap.w/2, trap.y + trap.h/2, '#ff6b6b', 12);
+            updateUI();
+            updateTrapKeys();
+        }
+        
+        function createExplosion(x, y, color, count) {
             for (let i = 0; i < count; i++) {
                 particles.push(new Particle(x, y, color));
             }
         }
         
-        // 输入处理
-        document.addEventListener('keydown', (e) => {
-            // 逃跑者
-            if (e.key === 'w' || e.key === 'W') runner.keys.w = true;
-            if (e.key === 'a' || e.key === 'A') runner.keys.a = true;
-            if (e.key === 's' || e.key === 'S') runner.keys.s = true;
-            if (e.key === 'd' || e.key === 'D') runner.keys.d = true;
-            
-            // 破坏者 - 方向键控制陷阱
-            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                e.preventDefault();
-                activateTrap(e.key);
-            }
-        });
-        
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'w' || e.key === 'W') runner.keys.w = false;
-            if (e.key === 'a' || e.key === 'A') runner.keys.a = false;
-            if (e.key === 's' || e.key === 'S') runner.keys.s = false;
-            if (e.key === 'd' || e.key === 'D') runner.keys.d = false;
-        });
-        
-        // 激活陷阱
-        function activateTrap(direction) {
-            if (game.trapsLeft <= 0 || !gameRunning) return;
-            
-            // 找到最近的未激活陷阱或重置已完成的陷阱
-            let trap = traps.find(t => !t.active);
-            if (!trap) {
-                // 如果没有未激活的，重置一个已经移动回来的
-                trap = traps.find(t => t.moveTimer <= 0 && t.x === t.originalX && t.y === t.originalY);
-            }
-            
-            if (trap) {
-                trap.active = true;
-                trap.direction = direction;
-                trap.moveTimer = 60; // 移动持续时间（帧）
-                game.trapsLeft--;
-                updateUI();
-                
-                // 视觉反馈
-                createExplosion(trap.x + trap.w/2, trap.y + trap.h/2, '#ff4444', 10);
+        function createSprintEffect() {
+            for (let i = 0; i < 5; i++) {
+                particles.push(new Particle(runner.x, runner.y, '#ffd93d', 2));
             }
         }
         
-        // 更新游戏逻辑
+        function getPathPosition(index, pos) {
+            if (index >= pathPoints.length - 1) {
+                return pathPoints[pathPoints.length - 1];
+            }
+            const p1 = pathPoints[index];
+            const p2 = pathPoints[index + 1];
+            return {
+                x: p1.x + (p2.x - p1.x) * pos,
+                y: p1.y + (p2.y - p1.y) * pos
+            };
+        }
+        
         function update() {
             if (!gameRunning) return;
+            gameTime++;
             
-            // 更新逃跑者
             updateRunner();
-            
-            // 更新陷阱
             updateTraps();
+            updateParticles();
+            checkCollisions();
+        }
+        
+        function updateRunner() {
+            if (runner.invincible > 0) {
+                runner.invincible--;
+                return;
+            }
             
-            // 更新粒子
+            let moveSpeed = 0;
+            
+            if (keys.ArrowRight) {
+                moveSpeed = runner.isSprinting ? runner.sprintSpeed : runner.baseSpeed;
+                runner.facing = 1;
+            } else if (keys.ArrowLeft) {
+                moveSpeed = -(runner.isSprinting ? runner.sprintSpeed : runner.baseSpeed);
+                runner.facing = -1;
+            }
+            
+            if (runner.isSprinting) {
+                runner.stamina -= runner.staminaCost;
+                if (runner.stamina <= 0) {
+                    runner.isSprinting = false;
+                    runner.stamina = 0;
+                }
+            } else {
+                runner.stamina = Math.min(runner.maxStamina, runner.stamina + runner.staminaRegen);
+            }
+            
+            if (moveSpeed !== 0) {
+                const p1 = pathPoints[runner.pathIndex];
+                const p2 = pathPoints[runner.pathIndex + 1];
+                if (!p2) return;
+                
+                const segLength = Math.sqrt((p2.x-p1.x)**2 + (p2.y-p1.y)**2);
+                const moveAmount = moveSpeed / segLength;
+                
+                runner.pathPos += moveAmount;
+                
+                while (runner.pathPos > 1) {
+                    runner.pathPos--;
+                    runner.pathIndex++;
+                    if (runner.pathIndex >= pathPoints.length - 1) {
+                        runner.pathIndex = pathPoints.length - 1;
+                        runner.pathPos = 0;
+                        game.winner = 'escape';
+                        endGame();
+                        return;
+                    }
+                }
+                
+                while (runner.pathPos < 0) {
+                    runner.pathIndex--;
+                    if (runner.pathIndex < 0) {
+                        runner.pathIndex = 0;
+                        runner.pathPos = 0;
+                        break;
+                    }
+                    const prevP1 = pathPoints[runner.pathIndex];
+                    const prevP2 = pathPoints[runner.pathIndex + 1];
+                    const prevLength = Math.sqrt((prevP2.x-prevP1.x)**2 + (prevP2.y-prevP1.y)**2);
+                    runner.pathPos = 1 + (moveSpeed / prevLength);
+                }
+                
+                const pos = getPathPosition(runner.pathIndex, runner.pathPos);
+                runner.x = pos.x;
+                runner.y = pos.y;
+                
+                if (gameTime % 2 === 0) {
+                    runner.trail.push({ 
+                        x: runner.x, 
+                        y: runner.y, 
+                        life: 15,
+                        color: runner.isSprinting ? '#ffd93d' : runner.color
+                    });
+                }
+            }
+            
+            runner.trail = runner.trail.filter(t => --t.life > 0);
+        }
+        
+        function updateTraps() {
+            traps.forEach(trap => {
+                if (trap.active) {
+                    if (trap.timer > 0) {
+                        trap.timer--;
+                        trap.y = trap.origY + Math.sin((90-trap.timer)*0.15) * 15;
+                    } else {
+                        trap.active = false;
+                        trap.y = trap.origY;
+                    }
+                }
+            });
+        }
+        
+        function updateParticles() {
             particles = particles.filter(p => {
                 p.update();
                 return p.life > 0;
             });
-            
-            // 检查胜利条件
-            checkWinCondition();
-            
-            // 更新无敌时间
-            if (runner.invincible > 0) runner.invincible--;
         }
         
-        function updateRunner() {
-            let dx = 0;
-            let dy = 0;
+        function checkCollisions() {
+            if (runner.invincible > 0) return;
             
-            if (runner.keys.w) dy = -runner.speed;
-            if (runner.keys.s) dy = runner.speed;
-            if (runner.keys.a) dx = -runner.speed;
-            if (runner.keys.d) dx = runner.speed;
-            
-            // 保存旧位置
-            const oldX = runner.x;
-            const oldY = runner.y;
-            
-            // 尝试移动
-            runner.x += dx;
-            runner.y += dy;
-            
-            // 边界检查
-            runner.x = Math.max(runner.size, Math.min(game.width - runner.size, runner.x));
-            runner.y = Math.max(runner.size, Math.min(game.height - runner.size, runner.y));
-            
-            // 平台碰撞检测
-            let onPlatform = false;
-            
-            for (let platform of platforms) {
-                if (rectIntersect(
-                    runner.x - runner.size, runner.y - runner.size, runner.size * 2, runner.size * 2,
-                    platform.x, platform.y, platform.w, platform.h
-                )) {
-                    // 简单碰撞响应：回退
-                    runner.x = oldX;
-                    runner.y = oldY;
-                }
-            }
-            
-            // 检查是否到达终点
-            const finish = platforms.find(p => p.type === 'finish');
-            if (finish && rectIntersect(
-                runner.x - runner.size, runner.y - runner.size, runner.size * 2, runner.size * 2,
-                finish.x, finish.y, finish.w, finish.h
-            )) {
-                game.winner = 'escape';
-                endGame();
-            }
-            
-            // 添加轨迹
-            if (dx !== 0 || dy !== 0) {
-                runner.trail.push({ x: runner.x, y: runner.y, life: 10 });
-            }
-            runner.trail = runner.trail.filter(t => --t.life > 0);
-            
-            // 陷阱碰撞检测
-            if (runner.invincible <= 0) {
-                for (let trap of traps) {
-                    if (trap.active && rectIntersect(
-                        runner.x - runner.size, runner.y - runner.size, runner.size * 2, runner.size * 2,
+            for (let trap of traps) {
+                if (trap.active && trap.timer > 0) {
+                    if (rectIntersect(
+                        runner.x - runner.size, runner.y - runner.size, 
+                        runner.size * 2, runner.size * 2,
                         trap.x, trap.y, trap.w, trap.h
                     )) {
                         hitRunner();
@@ -482,283 +793,294 @@
             }
         }
         
-        function updateTraps() {
-            for (let trap of traps) {
-                if (trap.active && trap.moveTimer > 0) {
-                    const speed = 4;
-                    
-                    switch(trap.direction) {
-                        case 'ArrowUp':
-                            trap.y -= speed;
-                            break;
-                        case 'ArrowDown':
-                            trap.y += speed;
-                            break;
-                        case 'ArrowLeft':
-                            trap.x -= speed;
-                            break;
-                        case 'ArrowRight':
-                            trap.x += speed;
-                            break;
-                    }
-                    
-                    trap.moveTimer--;
-                    
-                    // 边界检查
-                    trap.x = Math.max(0, Math.min(game.width - trap.w, trap.x));
-                    trap.y = Math.max(0, Math.min(game.height - trap.h, trap.y));
-                } else if (trap.moveTimer <= 0 && (trap.x !== trap.originalX || trap.y !== trap.originalY)) {
-                    // 缓慢返回原位
-                    trap.x += (trap.originalX - trap.x) * 0.1;
-                    trap.y += (trap.originalY - trap.y) * 0.1;
-                    
-                    if (Math.abs(trap.x - trap.originalX) < 1 && Math.abs(trap.y - trap.originalY) < 1) {
-                        trap.x = trap.originalX;
-                        trap.y = trap.originalY;
-                        trap.active = false;
-                    }
-                }
-            }
-        }
-        
         function hitRunner() {
-            game.lives--;
-            updateUI();
-            createExplosion(runner.x, runner.y, '#44ff44', 30);
+            runner.respawnCount++;
+            createExplosion(runner.x, runner.y, '#4ecdc4', 20);
             
-            // 重置逃跑者位置
-            runner.x = 50;
-            runner.y = 300;
-            runner.invincible = 120; // 2秒无敌时间
+            runner.pathIndex = 0;
+            runner.pathPos = 0;
+            const start = pathPoints[0];
+            runner.x = start.x;
+            runner.y = start.y;
+            runner.invincible = 120;
+            runner.stamina = 100;
+            runner.isSprinting = false;
+            runner.trail = [];
             
-            if (game.lives <= 0) {
-                game.winner = 'saboteur';
-                endGame();
-            }
+            canvas.style.transform = 'translate(3px, 3px)';
+            setTimeout(() => canvas.style.transform = '', 50);
         }
         
         function rectIntersect(x1, y1, w1, h1, x2, y2, w2, h2) {
             return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
         }
         
-        function checkWinCondition() {
-            if (game.trapsLeft === 0) {
-                // 检查所有陷阱是否都回归原位
-                const allReturned = traps.every(t => 
-                    Math.abs(t.x - t.originalX) < 1 && Math.abs(t.y - t.originalY) < 1
-                );
-                
-                if (allReturned && game.lives > 0) {
-                    // 破坏者没陷阱了，逃跑者只要还活着就赢
-                    // 但给破坏者一个机会，等待一段时间
-                }
-            }
-        }
-        
-        // 渲染
         function draw() {
-            // 清空画布
-            ctx.fillStyle = '#0a0a0a';
+            ctx.fillStyle = '#0a0a1a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 绘制网格背景
-            ctx.strokeStyle = '#1a1a1a';
+            // 网格
+            ctx.strokeStyle = '#1a1a3a';
             ctx.lineWidth = 1;
-            for (let i = 0; i < game.width; i += game.gridSize) {
+            for (let i = 0; i < game.width; i += 40) {
                 ctx.beginPath();
                 ctx.moveTo(i, 0);
                 ctx.lineTo(i, game.height);
                 ctx.stroke();
             }
-            for (let i = 0; i < game.height; i += game.gridSize) {
+            for (let i = 0; i < game.height; i += 40) {
                 ctx.beginPath();
                 ctx.moveTo(0, i);
                 ctx.lineTo(game.width, i);
                 ctx.stroke();
             }
             
-            // 绘制起点和终点标记
-            drawStartEnd();
+            drawPath();
             
-            // 绘制平台
-            for (let platform of platforms) {
-                if (platform.type === 'finish') {
-                    ctx.fillStyle = '#ffd700';
-                    ctx.shadowBlur = 20;
-                    ctx.shadowColor = '#ffd700';
-                } else {
-                    ctx.fillStyle = '#444';
-                    ctx.shadowBlur = 0;
-                }
-                ctx.fillRect(platform.x, platform.y, platform.w, platform.h);
-                
-                // 平台边框
-                ctx.strokeStyle = platform.type === 'finish' ? '#ffed4e' : '#666';
+            platforms.forEach(p => {
+                ctx.fillStyle = '#2d3561';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.strokeStyle = '#4ecdc4';
                 ctx.lineWidth = 2;
-                ctx.strokeRect(platform.x, platform.y, platform.w, platform.h);
-            }
-            ctx.shadowBlur = 0;
+                ctx.strokeRect(p.x, p.y, p.w, p.h);
+            });
             
-            // 绘制陷阱
-            for (let i = 0; i < traps.length; i++) {
-                const trap = traps[i];
+            drawMarkers();
+            drawTraps();
+            particles.forEach(p => p.draw());
+            drawRunner();
+        }
+        
+        function drawPath() {
+            ctx.strokeStyle = 'rgba(255, 217, 61, 0.4)';
+            ctx.lineWidth = 5;
+            ctx.setLineDash([12, 8]);
+            ctx.beginPath();
+            ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+            for (let i = 1; i < pathPoints.length; i++) {
+                ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 路径点
+            pathPoints.forEach((p, i) => {
+                ctx.fillStyle = i === 0 ? '#4ecdc4' : i === pathPoints.length-1 ? '#ffd93d' : 'rgba(255,217,61,0.4)';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, i === 0 || i === pathPoints.length-1 ? 10 : 5, 0, Math.PI*2);
+                ctx.fill();
+            });
+        }
+        
+        function drawTraps() {
+            traps.forEach(trap => {
+                const cx = trap.x + trap.w/2;
+                const cy = trap.y + trap.h/2;
                 
-                // 陷阱发光效果
-                if (trap.active) {
-                    ctx.shadowBlur = 20;
-                    ctx.shadowColor = '#ff0000';
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(trap.x + 3, trap.origY + 3, trap.w, trap.h);
+                
+                if (trap.used && !trap.active) {
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
+                    ctx.strokeStyle = '#555';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(trap.x, trap.y, trap.w, trap.h);
+                } else if (trap.active) {
+                    ctx.shadowBlur = 25;
+                    ctx.shadowColor = '#ff4757';
+                    
+                    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, trap.w);
+                    grad.addColorStop(0, '#ff6b6b');
+                    grad.addColorStop(0.6, '#ee5a5a');
+                    grad.addColorStop(1, '#c44569');
+                    ctx.fillStyle = grad;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(cx, trap.y);
+                    ctx.lineTo(trap.x + trap.w, trap.y + trap.h);
+                    ctx.lineTo(trap.x, trap.y + trap.h);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#ffd93d';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 6, 0, Math.PI*2);
+                    ctx.fill();
+                    
+                    ctx.shadowBlur = 0;
+                } else {
+                    ctx.fillStyle = '#2a1f1f';
+                    ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
+                    ctx.strokeStyle = '#ff6b6b';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(trap.x, trap.y, trap.w, trap.h);
+                    
+                    ctx.fillStyle = 'rgba(255,107,107,0.4)';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 4, 0, Math.PI*2);
+                    ctx.fill();
                 }
                 
-                // 陷阱主体
-                const gradient = ctx.createRadialGradient(
-                    trap.x + trap.w/2, trap.y + trap.h/2, 0,
-                    trap.x + trap.w/2, trap.y + trap.h/2, trap.w
-                );
-                gradient.addColorStop(0, '#ff4444');
-                gradient.addColorStop(1, '#990000');
-                ctx.fillStyle = gradient;
-                
-                // 绘制尖刺形状
-                ctx.beginPath();
-                ctx.moveTo(trap.x + trap.w/2, trap.y);
-                ctx.lineTo(trap.x + trap.w, trap.y + trap.h);
-                ctx.lineTo(trap.x, trap.y + trap.h);
-                ctx.closePath();
-                ctx.fill();
-                
-                // 编号
-                ctx.fillStyle = '#fff';
-                ctx.font = '12px Arial';
+                ctx.fillStyle = trap.used ? '#666' : '#fff';
+                ctx.font = 'bold 14px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(i + 1, trap.x + trap.w/2, trap.y + trap.h - 5);
-                
-                ctx.shadowBlur = 0;
-            }
+                ctx.textBaseline = 'middle';
+                ctx.fillText(trap.id, cx, cy);
+            });
+        }
+        
+        function drawRunner() {
+            if (runner.invincible > 0 && Math.floor(gameTime/5)%2 === 0) return;
             
-            // 绘制粒子
-            for (let particle of particles) {
-                particle.draw();
-            }
-            
-            // 绘制逃跑者轨迹
-            for (let i = 0; i < runner.trail.length; i++) {
-                const t = runner.trail[i];
-                ctx.fillStyle = `rgba(68, 255, 68, ${t.life / 10})`;
+            runner.trail.forEach(t => {
+                ctx.fillStyle = t.color === '#ffd93d' ? 
+                    `rgba(255, 217, 61, ${t.life/15})` : 
+                    `rgba(78, 205, 196, ${t.life/15})`;
                 ctx.beginPath();
-                ctx.arc(t.x, t.y, runner.size * (t.life / 10), 0, Math.PI * 2);
+                ctx.arc(t.x, t.y, runner.size * 0.8 * (t.life/15), 0, Math.PI*2);
                 ctx.fill();
-            }
+            });
             
-            // 绘制逃跑者
-            if (runner.invincible % 10 < 5) { // 闪烁效果
-                ctx.save();
-                ctx.translate(runner.x, runner.y);
-                
-                // 发光效果
+            ctx.save();
+            ctx.translate(runner.x, runner.y);
+            
+            if (runner.isSprinting) {
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = '#ffd93d';
+            } else {
                 ctx.shadowBlur = 20;
                 ctx.shadowColor = runner.color;
-                
-                // 身体
-                ctx.fillStyle = runner.color;
-                ctx.beginPath();
-                ctx.arc(0, 0, runner.size, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // 眼睛
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(-6, -4, 3, 0, Math.PI * 2);
-                ctx.arc(6, -4, 3, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // 方向指示
-                if (runner.keys.d) ctx.rotate(0);
-                else if (runner.keys.a) ctx.scale(-1, 1);
-                
-                ctx.restore();
             }
             
-            // 绘制陷阱数量提示（当剩余少时）
-            if (game.trapsLeft <= 3 && gameRunning) {
-                ctx.fillStyle = '#ff4444';
-                ctx.font = 'bold 30px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(`陷阱即将耗尽: ${game.trapsLeft}`, game.width/2, 50);
-            }
-        }
-        
-        function drawStartEnd() {
-            // 起点
-            ctx.fillStyle = '#4444ff';
-            ctx.fillRect(0, 250, 10, 100);
+            ctx.fillStyle = runner.isSprinting ? '#ffd93d' : runner.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, runner.size, 0, Math.PI*2);
+            ctx.fill();
+            
             ctx.fillStyle = '#fff';
-            ctx.font = '20px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('起点', 30, 305);
+            ctx.beginPath();
+            ctx.arc(runner.facing * 6, -3, 4, 0, Math.PI*2);
+            ctx.fill();
             
-            // 终点线效果
-            const finish = platforms.find(p => p.type === 'finish');
-            if (finish) {
-                ctx.strokeStyle = '#ffd700';
-                ctx.lineWidth = 3;
-                ctx.setLineDash([10, 10]);
-                ctx.beginPath();
-                ctx.moveTo(finish.x, finish.y - 20);
-                ctx.lineTo(finish.x + finish.w, finish.y - 20);
-                ctx.stroke();
-                ctx.setLineDash([]);
-                
-                ctx.fillStyle = '#ffd700';
-                ctx.fillText('终点', finish.x + finish.w/2, finish.y - 30);
+            if (runner.isSprinting) {
+                ctx.fillStyle = 'rgba(255, 217, 61, 0.5)';
+                for (let i = 1; i <= 3; i++) {
+                    ctx.beginPath();
+                    ctx.arc(-runner.facing * i * 8, 0, runner.size * (1 - i*0.2), 0, Math.PI*2);
+                    ctx.fill();
+                }
             }
+            
+            ctx.restore();
         }
         
-        // 游戏循环
+        function drawMarkers() {
+            ctx.fillStyle = '#4ecdc4';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('起点', 50, 260);
+            
+            ctx.strokeStyle = '#4ecdc4';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(50, 300, 20, 0, Math.PI*2);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#ffd93d';
+            ctx.font = 'bold 24px Arial';
+            ctx.fillText('终点', 950, 310);
+            
+            ctx.strokeStyle = '#ffd93d';
+            ctx.lineWidth = 4;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#ffd93d';
+            ctx.beginPath();
+            ctx.arc(950, 350, 30, 0, Math.PI*2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            ctx.fillStyle = '#ffd93d';
+            ctx.beginPath();
+            ctx.moveTo(950, 320);
+            ctx.lineTo(980, 335);
+            ctx.lineTo(950, 350);
+            ctx.fill();
+        }
+        
         function gameLoop() {
             update();
             draw();
             animationId = requestAnimationFrame(gameLoop);
         }
         
-        // UI更新
         function updateUI() {
-            document.getElementById('trapCount').textContent = game.trapsLeft;
-            let hearts = '';
-            for (let i = 0; i < game.lives; i++) hearts += '❤️';
-            document.getElementById('health').textContent = hearts || '💀';
+            document.getElementById('trapsLeft').textContent = game.trapsLeft;
+            const progress = Math.floor((runner.pathIndex + runner.pathPos) / (pathPoints.length - 1) * 100);
+            document.getElementById('progress').textContent = Math.min(100, progress);
         }
         
-        // 游戏控制
+        function updateTrapKeys() {
+            document.querySelectorAll('.trap-key').forEach(key => {
+                const num = parseInt(key.dataset.trap);
+                const trap = traps.find(t => t.id === num);
+                key.classList.toggle('used', trap.used);
+                key.classList.toggle('active-trap', trap.active);
+            });
+        }
+        
         function startGame() {
             document.getElementById('startScreen').style.display = 'none';
             gameRunning = true;
             game.trapsLeft = 10;
-            game.lives = 3;
             game.winner = null;
-            runner.x = 50;
-            runner.y = 300;
-            runner.trail = [];
+            gameTime = 0;
+            
+            runner.pathIndex = 0;
+            runner.pathPos = 0;
+            runner.x = pathPoints[0].x;
+            runner.y = pathPoints[0].y;
+            runner.facing = 1;
+            runner.speed = 0;
+            runner.isSprinting = false;
+            runner.stamina = 100;
             runner.invincible = 0;
-            initLevel();
+            runner.respawnCount = 0;
+            runner.trail = [];
+            runner.lastKeyTime = 0;
+            runner.lastKey = null;
+            
+            keys.ArrowLeft = false;
+            keys.ArrowRight = false;
+            
+            initTraps();
             updateUI();
+            updateTrapKeys();
+            particles = [];
         }
         
         function endGame() {
             gameRunning = false;
-            const gameOver = document.getElementById('gameOver');
-            const winnerText = document.getElementById('winnerText');
-            const winnerDesc = document.getElementById('winnerDesc');
+            const go = document.getElementById('gameOver');
+            const wt = document.getElementById('winnerText');
+            const fs = document.getElementById('finalStats');
             
-            gameOver.style.display = 'block';
+            go.style.display = 'block';
             
             if (game.winner === 'escape') {
-                winnerText.textContent = '🏃 逃跑者胜利！';
-                winnerText.className = 'winner-escape';
-                winnerDesc.textContent = `剩余生命: ${game.lives} | 剩余陷阱: ${game.trapsLeft}`;
+                wt.textContent = '🏃 逃跑者逃脱！';
+                wt.className = 'winner-escape';
+                fs.innerHTML = `
+                    <div class="stat">重生: ${runner.respawnCount}次</div>
+                    <div class="stat">剩余陷阱: ${game.trapsLeft}</div>
+                `;
             } else {
-                winnerText.textContent = '🕸️ 破坏者胜利！';
-                winnerText.className = 'winner-saboteur';
-                winnerDesc.textContent = '成功阻止了逃跑者！';
+                wt.textContent = '🕸️ 破坏者胜利！';
+                wt.className = 'winner-saboteur';
+                fs.innerHTML = `
+                    <div class="stat">成功阻止逃脱</div>
+                    <div class="stat">使用陷阱: ${10 - game.trapsLeft}/10</div>
+                `;
             }
         }
         
@@ -767,8 +1089,10 @@
             startGame();
         }
         
-        // 启动游戏循环
+        initTraps();
+        updateTrapKeys();
         gameLoop();
+        setInterval(updateUI, 100);
     </script>
 </body>
 </html>
