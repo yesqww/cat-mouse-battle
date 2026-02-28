@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红蓝大侠对决 - 人形版</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #1a1a2e;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #gameCanvas {
+            border: 3px solid #fff;
+            background: linear-gradient(to bottom, #16213e 0%, #0f3460 100%);
+            margin-top: 20px;
+        }
+        
+        #controls {
+            margin-top: 10px;
+            display: flex;
+            gap: 50px;
+            text-align: center;
+        }
+        
+        .player-controls {
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        #red-controls {
+            background: rgba(231, 76, 60, 0.3);
+            border: 2px solid #e74c3c;
+        }
+        
+        #blue-controls {
+            background: rgba(52, 152, 219, 0.3);
+            border: 2px solid #3498db;
+        }
+        
+        h2 {
+            margin: 5px 0;
+        }
+        
+        .key {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #333;
+            border-radius: 4px;
+            margin: 2px;
+            font-weight: bold;
+        }
+        
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 10;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin-top: 15px;
+            cursor: pointer;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        
+        button:hover {
+            background: #c0392b;
+        }
+        
+        #ammo-display {
+            position: absolute;
+            top: 10px;
+            display: flex;
+            gap: 200px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚔️ 红蓝大侠对决 🏹</h1>
+    
+    <div style="position: relative;">
+        <canvas id="gameCanvas" width="1200" height="600"></canvas>
+        <div id="ammo-display">
+            <span style="color: #e74c3c;">🔴 弓箭: <span id="red-arrows">5</span>/5</span>
+            <span style="color: #3498db;">🔵 弓箭: <span id="blue-arrows">5</span>/5</span>
+        </div>
+    </div>
+    
+    <div id="controls">
+        <div class="player-controls" id="red-controls">
+            <h2>🔴 红色大侠</h2>
+            <p>移动: <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> (W跳, S下蹲)</p>
+            <p>剑: <span class="key">1</span> | 弓: <span class="key">2</span></p>
+            <p>生命: <span id="red-hp">❤️❤️❤️❤️❤️❤️</span></p>
+        </div>
+        <div class="player-controls" id="blue-controls">
+            <h2>🔵 蓝色大侠</h2>
+            <p>移动: <span class="key">↑</span><span class="key">←</span><span class="key">↓</span><span class="key">→</span> (↑跳, ↓下蹲)</p>
+            <p>剑: <span class="key">,</span> | 弓: <span class="key">.</span></p>
+            <p>生命: <span id="blue-hp">❤️❤️❤️❤️❤️❤️</span></p>
+        </div>
+    </div>
+    
+    <div id="gameOver">
+        <h1 id="winner"></h1>
+        <button onclick="resetGame()">重新开始</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 游戏状态
+        let gameRunning = true;
+        const gravity = 0.5;
+        const groundY = 550;
+        
+        // 地图元素
+        const platforms = [
+            // 地面
+            {x: 0, y: groundY, width: 300, height: 50, type: 'ground'},
+            {x: 400, y: groundY, width: 400, height: 50, type: 'ground'},
+            {x: 900, y: groundY, width: 300, height: 50, type: 'ground'},
+            
+            // 第一层跳板
+            {x: 150, y: 480, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            {x: 350, y: 450, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            {x: 550, y: 480, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            {x: 750, y: 450, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            {x: 950, y: 480, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            
+            // 第二层跳板
+            {x: 250, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            {x: 500, y: 350, width: 120, height: 20, type: 'platform', jumpBoost: true},
+            {x: 800, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            
+            // 第三层跳板
+            {x: 400, y: 280, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            {x: 650, y: 280, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            
+            // 最高层
+            {x: 525, y: 200, width: 100, height: 20, type: 'platform', jumpBoost: true},
+        ];
+        
+        // 坑洞
+        const pits = [
+            {x: 300, y: groundY, width: 100, height: 100},
+            {x: 800, y: groundY, width: 100, height: 100}
+        ];
+        
+        // 玩家对象 - 更像人的设计
+        function createPlayer(x, y, color, facing) {
+            return {
+                x: x,
+                y: y,
+                width: 30,
+                height: 50, // 更高的人形
+                normalHeight: 50,
+                crouchHeight: 30, // 下蹲时高度
+                color: color,
+                vx: 0,
+                vy: 0,
+                speed: 5,
+                crouchSpeed: 2.5, // 下蹲时移动速度减半
+                jumpPower: -12,
+                hp: 6,
+                maxHp: 6,
+                facing: facing,
+                attacking: false,
+                attackTimer: 0,
+                attackType: '',
+                onGround: false,
+                invincible: 0,
+                arrowsLeft: 5,
+                maxArrows: 5,
+                swordLength: 5,
+                onPlatform: false,
+                jumpBoosted: false,
+                crouching: false, // 是否下蹲
+                crouchKeyHeld: false,
+                animTimer: 0 // 动画计时器
+            };
+        }
+        
+        const player1 = createPlayer(150, groundY - 50, '#e74c3c', 1);
+        const player2 = createPlayer(1050, groundY - 50, '#3498db', -1);
+        
+        // 箭矢数组
+        let arrows = [];
+        
+        // 按键状态
+        const keys = {};
+        
+        // 监听键盘
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            
+            // 红色玩家攻击
+            if (e.key === '1' && gameRunning) player1Attack('sword');
+            if (e.key === '2' && gameRunning) player1Attack('bow');
+            
+            // 蓝色玩家攻击
+            if (e.key === ',' && gameRunning) player2Attack('sword');
+            if (e.key === '.' && gameRunning) player2Attack('bow');
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        // 红色玩家攻击
+        function player1Attack(type) {
+            if (player1.attacking || player1.crouching) return; // 下蹲时不能攻击
+            
+            if (type === 'bow' && player1.arrowsLeft <= 0) return;
+            
+            player1.attacking = true;
+            player1.attackType = type;
+            player1.attackTimer = type === 'sword' ? 25 : 15;
+            
+            if (type === 'bow') {
+                player1.arrowsLeft--;
+                updateAmmo();
+                arrows.push({
+                    x: player1.x + (player1.facing === 1 ? 25 : 5),
+                    y: player1.y + 20,
+                    vx: player1.facing * 12,
+                    vy: 0,
+                    owner: 1,
+                    color: '#e74c3c'
+                });
+            }
+        }
+        
+        // 蓝色玩家攻击
+        function player2Attack(type) {
+            if (player2.attacking || player2.crouching) return; // 下蹲时不能攻击
+            
+            if (type === 'bow' && player2.arrowsLeft <= 0) return;
+            
+            player2.attacking = true;
+            player2.attackType = type;
+            player2.attackTimer = type === 'sword' ? 25 : 15;
+            
+            if (type === 'bow') {
+                player2.arrowsLeft--;
+                updateAmmo();
+                arrows.push({
+                    x: player2.x + (player2.facing === 1 ? 25 : 5),
+                    y: player2.y + 20,
+                    vx: player2.facing * 12,
+                    vy: 0,
+                    owner: 2,
+                    color: '#3498db'
+                });
+            }
+        }
+        
+        // 碰撞检测
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+        
+        // 更新游戏
+        function update() {
+            if (!gameRunning) return;
+            
+            // 红色玩家
+            updatePlayer(player1, {
+                left: keys['a'] || keys['A'],
+                right: keys['d'] || keys['D'],
+                jump: keys['w'] || keys['W'],
+                crouch: keys['s'] || keys['S']
+            });
+            
+            // 蓝色玩家
+            updatePlayer(player2, {
+                left: keys['ArrowLeft'],
+                right: keys['ArrowRight'],
+                jump: keys['ArrowUp'],
+                crouch: keys['ArrowDown']
+            });
+            
+            // 箭矢更新
+            updateArrows();
+        }
+        
+        function updatePlayer(p, input) {
+            // 下蹲处理
+            if (input.crouch && p.onGround) {
+                if (!p.crouching) {
+                    p.crouching = true;
+                    p.height = p.crouchHeight;
+                    p.y += (p.normalHeight - p.crouchHeight); // 调整位置避免悬空
+                }
+            } else {
+                // 尝试站起（检查头顶是否有空间）
+                if (p.crouching) {
+                    let canStand = true;
+                    let standHeight = p.normalHeight - p.crouchHeight;
+                    
+                    // 检查上方平台
+                    platforms.forEach(plat => {
+                        if (plat.type === 'platform' && 
+                            p.x < plat.x + plat.width && 
+                            p.x + p.width > plat.x &&
+                            p.y - standHeight < plat.y + plat.height &&
+                            p.y > plat.y) {
+                            canStand = false;
+                        }
+                    });
+                    
+                    if (canStand) {
+                        p.crouching = false;
+                        p.height = p.normalHeight;
+                        p.y -= standHeight;
+                    }
+                }
+            }
+            
+            // 移动
+            let currentSpeed = p.crouching ? p.crouchSpeed : p.speed;
+            
+            if (input.left) {
+                p.vx = -currentSpeed;
+                p.facing = -1;
+            } else if (input.right) {
+                p.vx = currentSpeed;
+                p.facing = 1;
+            } else {
+                p.vx *= 0.8;
+            }
+            
+            // 跳跃（下蹲时不能跳）
+            if (input.jump && !p.jumpKeyHeld && !p.crouching) {
+                if (p.onGround || p.onPlatform) {
+                    p.vy = p.jumpPower;
+                    p.onGround = false;
+                    p.onPlatform = false;
+                    p.jumpKeyHeld = true;
+                    
+                    if (p.jumpBoosted) {
+                        p.vy *= 1.4;
+                        p.jumpBoosted = false;
+                    }
+                }
+            }
+            if (!input.jump) {
+                p.jumpKeyHeld = false;
+            }
+            
+            // 物理更新
+            p.vy += gravity;
+            p.x += p.vx;
+            p.y += p.vy;
+            
+            p.onGround = false;
+            p.onPlatform = false;
+            p.jumpBoosted = false;
+            
+            // 平台碰撞
+            platforms.forEach(plat => {
+                if (checkCollision(p, plat)) {
+                    if (p.vy > 0 && p.y + p.height - p.vy <= plat.y + 10) {
+                        p.y = plat.y - p.height;
+                        p.vy = 0;
+                        
+                        if (plat.type === 'ground') {
+                            p.onGround = true;
+                        } else {
+                            p.onPlatform = true;
+                            if (plat.jumpBoost) {
+                                p.jumpBoosted = true;
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 坑洞检测
+            pits.forEach(pit => {
+                if (p.x > pit.x && p.x + p.width < pit.x + pit.width && p.y > groundY) {
+                    p.hp = 0;
+                    updateHP();
+                    checkWin();
+                }
+            });
+            
+            // 边界限制
+            if (p.x < 0) p.x = 0;
+            if (p.x > canvas.width - p.width) p.x = canvas.width - p.width;
+            
+            // 无敌时间
+            if (p.invincible > 0) p.invincible--;
+            
+            // 攻击计时器
+            if (p.attackTimer > 0) {
+                p.attackTimer--;
+                if (p.attackTimer === 0) p.attacking = false;
+            }
+            
+            // 动画计时器
+            p.animTimer++;
+            
+            // 掉出地图
+            if (p.y > canvas.height) {
+                p.hp = 0;
+                updateHP();
+                checkWin();
+            }
+        }
+        
+        function updateArrows() {
+            for (let i = arrows.length - 1; i >= 0; i--) {
+                let arrow = arrows[i];
+                arrow.x += arrow.vx;
+                arrow.y += arrow.vy;
+                
+                // 平台碰撞
+                let hitPlatform = false;
+                platforms.forEach(plat => {
+                    if (arrow.x > plat.x && arrow.x < plat.x + plat.width &&
+                        arrow.y > plat.y && arrow.y < plat.y + plat.height) {
+                        hitPlatform = true;
+                    }
+                });
+                
+                // 击中玩家
+                let target = arrow.owner === 1 ? player2 : player1;
+                if (!hitPlatform && 
+                    arrow.x > target.x && arrow.x < target.x + target.width &&
+                    arrow.y > target.y && arrow.y < target.y + target.height) {
+                    if (target.invincible === 0) {
+                        target.hp--;
+                        target.invincible = 60;
+                        updateHP();
+                        checkWin();
+                    }
+                    arrows.splice(i, 1);
+                    continue;
+                }
+                
+                if (arrow.x < 0 || arrow.x > canvas.width || hitPlatform) {
+                    arrows.splice(i, 1);
+                }
+            }
+        }
+        
+        // 剑攻击检测
+        function checkSwordHit(attacker, target) {
+            if (!attacker.attacking || attacker.attackType !== 'sword') return;
+            if (attacker.attackTimer !== 18) return;
+            
+            const swordLength = 50;
+            const swordWidth = 12;
+            
+            // 根据是否下蹲调整攻击高度
+            let attackY = attacker.crouching ? attacker.y + 5 : attacker.y + 15;
+            let attackX = attacker.facing === 1 ? attacker.x + attacker.width : attacker.x - swordLength;
+            
+            if (attackX < target.x + target.width && attackX + swordLength > target.x &&
+                attackY < target.y + target.height && attackY + swordWidth > target.y) {
+                if (target.invincible === 0) {
+                    target.hp--;
+                    target.invincible = 60;
+                    target.vx = attacker.facing * 12;
+                    target.vy = -8;
+                    updateHP();
+                    checkWin();
+                }
+            }
+        }
+        
+        // 绘制游戏
+        function draw() {
+            ctx.fillStyle = '#0f3460';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 背景装饰
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            for(let i=0; i<10; i++) {
+                ctx.fillRect(i*150, 100 + Math.sin(i)*50, 80, 80);
+            }
+            
+            // 坑洞
+            ctx.fillStyle = '#000';
+            pits.forEach(pit => {
+                ctx.fillRect(pit.x, pit.y, pit.width, canvas.height - pit.y);
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(pit.x, pit.y, 5, 10);
+                ctx.fillRect(pit.x + pit.width - 5, pit.y, 5, 10);
+                ctx.fillStyle = '#000';
+            });
+            
+            // 平台
+            platforms.forEach(plat => {
+                if (plat.type === 'ground') {
+                    ctx.fillStyle = '#2ecc71';
+                    ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+                    ctx.fillStyle = '#27ae60';
+                    ctx.fillRect(plat.x, plat.y, plat.width, 5);
+                } else {
+                    if (plat.jumpBoost) {
+                        ctx.fillStyle = '#f1c40f';
+                        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+                        ctx.fillStyle = '#f39c12';
+                        ctx.fillRect(plat.x, plat.y + 15, plat.width, 5);
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '16px Arial';
+                        ctx.fillText('↑', plat.x + plat.width/2 - 8, plat.y - 5);
+                    } else {
+                        ctx.fillStyle = '#95a5a6';
+                        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+                        ctx.fillStyle = '#7f8c8d';
+                        ctx.fillRect(plat.x, plat.y + 15, plat.width, 5);
+                    }
+                }
+            });
+            
+            // 绘制玩家
+            drawHumanPlayer(player1);
+            drawHumanPlayer(player2);
+            
+            // 绘制箭矢
+            arrows.forEach(arrow => {
+                ctx.save();
+                ctx.translate(arrow.x, arrow.y);
+                ctx.rotate(arrow.vx > 0 ? 0 : Math.PI);
+                
+                ctx.fillStyle = arrow.color;
+                ctx.fillRect(-10, -2, 20, 4);
+                
+                ctx.beginPath();
+                ctx.moveTo(10, -4);
+                ctx.lineTo(18, 0);
+                ctx.lineTo(10, 4);
+                ctx.fill();
+                
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.moveTo(-10, -2);
+                ctx.lineTo(-15, -6);
+                ctx.lineTo(-12, -2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(-10, 2);
+                ctx.lineTo(-15, 6);
+                ctx.lineTo(-12, 2);
+                ctx.fill();
+                
+                ctx.restore();
+            });
+        }
+        
+        // 绘制人形玩家
+        function drawHumanPlayer(p) {
+            ctx.save();
+            
+            // 无敌闪烁
+            if (p.invincible > 0 && Math.floor(p.invincible / 5) % 2 === 0) {
+                ctx.globalAlpha = 0.5;
+            }
+            
+            const centerX = p.x + p.width / 2;
+            const bottomY = p.y + p.height;
+            const isCrouching = p.crouching;
+            const height = p.height;
+            
+            // 身体比例
+            const headSize = 12;
+            const bodyWidth = 16;
+            const bodyHeight = isCrouching ? height * 0.4 : height * 0.35;
+            const legWidth = 6;
+            const legHeight = isCrouching ? height * 0.3 : height * 0.4;
+            
+            // 颜色
+            const mainColor = p.color;
+            const darkColor = p.color === '#e74c3c' ? '#c0392b' : '#2980b9';
+            const skinColor = '#f1c40f';
+            
+            // 腿部动画
+            let legOffset = 0;
+            if (Math.abs(p.vx) > 0.5 && (p.onGround || p.onPlatform)) {
+                legOffset = Math.sin(p.animTimer * 0.3) * 3;
+            }
+            
+            // 绘制后腿
+            ctx.fillStyle = darkColor;
+            if (isCrouching) {
+                // 下蹲时腿弯曲
+                ctx.fillRect(centerX - 8, bottomY - 15, 6, 10);
+                ctx.fillRect(centerX + 2, bottomY - 15, 6, 10);
+                ctx.fillRect(centerX - 8, bottomY - 5, 6, 5);
+                ctx.fillRect(centerX + 2, bottomY - 5, 6, 5);
+            } else {
+                // 站立/行走时腿
+                ctx.fillRect(centerX - 8 + legOffset, bottomY - legHeight, legWidth, legHeight);
+                ctx.fillRect(centerX + 2 - legOffset, bottomY - legHeight, legWidth, legHeight);
+            }
+            
+            // 绘制身体
+            ctx.fillStyle = mainColor;
+            const bodyY = bottomY - legHeight - bodyHeight;
+            ctx.fillRect(centerX - bodyWidth/2, bodyY, bodyWidth, bodyHeight);
+            
+            // 身体细节 - 腰带
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(centerX - bodyWidth/2, bodyY + bodyHeight - 5, bodyWidth, 5);
+            
+            // 绘制头部
+            const headY = bodyY - headSize;
+            ctx.fillStyle = skinColor;
+            ctx.fillRect(centerX - headSize/2, headY, headSize, headSize);
+            
+            // 头发/头盔
+            ctx.fillStyle = darkColor;
+            ctx.fillRect(centerX - headSize/2, headY, headSize, 4);
+            ctx.fillRect(centerX - headSize/2 - 2, headY + 2, 2, 6);
+            ctx.fillRect(centerX + headSize/2, headY + 2, 2, 6);
+            
+            // 眼睛
+            ctx.fillStyle = 'white';
+            const eyeX = p.facing === 1 ? centerX + 2 : centerX - 6;
+            ctx.fillRect(eyeX, headY + 4, 4, 4);
+            ctx.fillStyle = 'black';
+            ctx.fillRect(eyeX + (p.facing === 1 ? 1 : 0), headY + 5, 2, 2);
+            
+            // 手臂和武器
+            const armY = bodyY + 5;
+            
+            if (p.attacking && p.attackType === 'sword') {
+                // 挥剑动画
+                ctx.save();
+                ctx.translate(centerX, armY + 10);
+                
+                let progress = (25 - p.attackTimer) / 25;
+                let angle = p.facing === 1 ? 
+                    -Math.PI/3 + progress * Math.PI/1.5 : 
+                    Math.PI/3 - progress * Math.PI/1.5;
+                
+                ctx.rotate(angle);
+                
+                // 手臂
+                ctx.fillStyle = skinColor;
+                ctx.fillRect(0, -3, 15, 6);
+                
+                // 剑
+                const swordLength = 50;
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(12, -4, 10, 8); // 剑柄
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillRect(20, -6, 4, 12); // 护手
+                ctx.fillStyle = '#bdc3c7';
+                ctx.fillRect(22, -3, swordLength, 6); // 剑刃
+                ctx.fillStyle = '#ecf0f1';
+                ctx.fillRect(22, -1, swordLength, 2); // 剑刃高光
+                ctx.fillStyle = '#95a5a6';
+                ctx.beginPath();
+                ctx.moveTo(22 + swordLength, -3);
+                ctx.lineTo(22 + swordLength + 6, 0);
+                ctx.lineTo(22 + swordLength, 3);
+                ctx.fill();
+                
+                ctx.restore();
+            } else {
+                // 持剑姿势
+                ctx.fillStyle = skinColor;
+                if (p.facing === 1) {
+                    ctx.fillRect(centerX, armY, 12, 5);
+                    ctx.fillRect(centerX + 10, armY - 2, 5, 10);
+                } else {
+                    ctx.fillRect(centerX - 12, armY, 12, 5);
+                    ctx.fillRect(centerX - 15, armY - 2, 5, 10);
+                }
+                
+                // 背着的剑
+                ctx.save();
+                ctx.translate(centerX + (p.facing === 1 ? -8 : 8), bodyY + 5);
+                ctx.rotate(p.facing === 1 ? -0.3 : 0.3);
+                
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(-3, 0, 6, 12);
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillRect(-4, 10, 8, 3);
+                ctx.fillStyle = '#95a5a6';
+                ctx.fillRect(-2, -35, 4, 35);
+                
+                ctx.restore();
+            }
+            
+            // 弓（背在身后）
+            if (!p.attacking || p.attackType !== 'bow') {
+                ctx.strokeStyle = '#8b4513';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(centerX + (p.facing === 1 ? -10 : 10), bodyY + 8, 10, Math.PI/2, -Math.PI/2, true);
+                ctx.stroke();
+            }
+            
+            // 生命指示器
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText('HP:' + p.hp, p.x, p.y - 5);
+            
+            // 弹药指示
+            if (p.arrowsLeft > 0) {
+                ctx.fillStyle = '#f1c40f';
+                for(let i=0; i<p.arrowsLeft; i++) {
+                    ctx.fillRect(p.x + i*6, p.y - 15, 4, 2);
+                }
+            }
+            
+            // 下蹲指示
+            if (isCrouching) {
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fillRect(p.x, p.y, p.width, p.height);
+            }
+            
+            ctx.restore();
+        }
+        
+        // 更新生命显示
+        function updateHP() {
+            document.getElementById('red-hp').textContent = '❤️'.repeat(player1.hp) + '🖤'.repeat(player1.maxHp-player1.hp);
+            document.getElementById('blue-hp').textContent = '❤️'.repeat(player2.hp) + '🖤'.repeat(player2.maxHp-player2.hp);
+        }
+        
+        // 更新弹药显示
+        function updateAmmo() {
+            document.getElementById('red-arrows').textContent = player1.arrowsLeft;
+            document.getElementById('blue-arrows').textContent = player2.arrowsLeft;
+        }
+        
+        // 检查胜利
+        function checkWin() {
+            // 先检查剑攻击
+            checkSwordHit(player1, player2);
+            checkSwordHit(player2, player1);
+            
+            if (player1.hp <= 0) {
+                endGame('🔵 蓝色大侠获胜！');
+            } else if (player2.hp <= 0) {
+                endGame('🔴 红色大侠获胜！');
+            }
+        }
+        
+        // 游戏结束
+        function endGame(winnerText) {
+            gameRunning = false;
+            document.getElementById('winner').textContent = winnerText;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+        // 重置游戏
+        function resetGame() {
+            Object.assign(player1, createPlayer(150, groundY - 50, '#e74c3c', 1));
+            Object.assign(player2, createPlayer(1050, groundY - 50, '#3498db', -1));
+            
+            arrows = [];
+            gameRunning = true;
+            document.getElementById('gameOver').style.display = 'none';
+            updateHP();
+            updateAmmo();
+        }
+        
+        // 游戏循环
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        gameLoop();
+    </script>
+</body>
+</html>
