@@ -180,6 +180,11 @@
             color: #ff8c00;
         }
         
+        .tag-survival {
+            background: rgba(255, 140, 66, 0.2);
+            color: #ff8c42;
+        }
+        
         .play-btn {
             display: inline-block;
             margin-top: 15px;
@@ -222,7 +227,24 @@
     </header>
     
     <main class="games-container">
-        <!-- 1. 猫鼠大战 -->
+        <!-- 1. 转刀侠（新增） -->
+        <div class="game-card" onclick="window.open('./games/zhuandao/', '_blank')">
+            <div class="game-preview" style="background: linear-gradient(135deg, #3d2817 0%, #1a0f08 100%);">
+                <span class="game-icon">⚔️🌀</span>
+            </div>
+            <div class="game-info">
+                <h2 class="game-title" style="color: #ff8c42; text-shadow: 0 0 10px rgba(255, 140, 66, 0.5);">转刀侠</h2>
+                <p class="game-desc">橙色风暴来袭！旋转刀刃斩杀敌人，收集绿色心形补血，挑战精英怪和BOSS。支持虚拟摇杆和全屏触摸，爽快的幸存者类游戏体验！</p>
+                <div class="game-meta">
+                    <span class="tag tag-mobile">📱 手机电脑通用</span>
+                    <span class="tag tag-survival">生存</span>
+                    <span class="tag tag-hard">Roguelike</span>
+                </div>
+                <a href="./games/zhuandao/" target="_blank" class="play-btn" style="background: linear-gradient(45deg, #ff8c42, #ff6b35);">开始转刀 →</a>
+            </div>
+        </div>
+        
+        <!-- 2. 猫鼠大战 -->
         <div class="game-card" onclick="window.open('./games/cat-mouse/', '_blank')">
             <div class="game-preview">
                 <span class="game-icon">🐱🐭</span>
@@ -239,7 +261,7 @@
             </div>
         </div>
         
-        <!-- 2. 俄罗斯方块 Tetris -->
+        <!-- 3. 俄罗斯方块 Tetris -->
         <div class="game-card" onclick="window.open('./games/tetris/', '_blank')">
             <div class="game-preview" style="background: linear-gradient(135deg, #1a0a2e 0%, #0f0520 100%);">
                 <span class="game-icon">🎮🧱</span>
@@ -256,7 +278,7 @@
             </div>
         </div>
         
-        <!-- 3. 太空射击 经典版（单人） -->
+        <!-- 4. 太空射击 经典版（单人） -->
         <div class="game-card" onclick="window.open('./games/space-shooter/', '_blank')">
             <div class="game-preview" style="background: linear-gradient(135deg, #1a1a3e 0%, #0f0f2e 100%);">
                 <span class="game-icon">🚀👾</span>
@@ -273,7 +295,7 @@
             </div>
         </div>
         
-        <!-- 4. 太空射击 双人合作版 -->
+        <!-- 5. 太空射击 双人合作版 -->
         <div class="game-card" onclick="window.open('./games/space-shooter-duo/', '_blank')">
             <div class="game-preview" style="background: linear-gradient(135deg, #2d1b1b 0%, #1a0f0f 100%);">
                 <span class="game-icon">🚀👥</span>
@@ -290,7 +312,7 @@
             </div>
         </div>
         
-        <!-- 5. 赛博赛车 HexGL -->
+        <!-- 6. 赛博赛车 HexGL -->
         <div class="game-card" onclick="window.open('./games/racing/', '_blank')">
             <div class="game-preview" style="background: linear-gradient(135deg, #0a0a2e 0%, #1a0a3e 100%);">
                 <span class="game-icon">🏎️💨</span>
@@ -307,7 +329,7 @@
             </div>
         </div>
         
-        <!-- 6. 红蓝大侠争霸（新增） -->
+        <!-- 7. 红蓝大侠争霸 -->
         <div class="game-card" onclick="window.open('./games/fight/', '_blank')">
             <div class="game-preview" style="background: linear-gradient(135deg, #2c0a0a 0%, #0a0a2c 100%);">
                 <span class="game-icon">⚔️🏹</span>
@@ -324,7 +346,7 @@
             </div>
         </div>
         
-        <!-- 7. 赛博枪战 -->
+        <!-- 8. 赛博枪战 -->
         <div class="game-card" onclick="window.open('./games/top-down-shooter/', '_blank')">
             <div class="game-preview" style="background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 100%);">
                 <span class="game-icon">⚡🔫</span>
@@ -341,7 +363,7 @@
             </div>
         </div>
         
-        <!-- 8. 陷阱跑酷（新增） -->
+        <!-- 9. 陷阱跑酷 -->
         <div class="game-card" onclick="window.open('./games/paoku/', '_blank')">
             <div class="game-preview" style="background: linear-gradient(135deg, #2d1f0f 0%, #1a1209 100%);">
                 <span class="game-icon">🏃⚠️</span>
