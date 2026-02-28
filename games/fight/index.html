@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>红蓝小人剑弓对决</title>
+    <title>红蓝小人剑弓对决 - 增强版</title>
     <style>
         body {
             margin: 0;
@@ -84,26 +84,41 @@
         button:hover {
             background: #c0392b;
         }
+        
+        #ammo-display {
+            position: absolute;
+            top: 10px;
+            display: flex;
+            gap: 200px;
+            font-size: 20px;
+            font-weight: bold;
+        }
     </style>
 <base target="_blank">
 </head>
 <body>
-    <h1>⚔️ 红蓝对决 🏹</h1>
+    <h1>⚔️ 红蓝对决 - 增强版 🏹</h1>
     
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <div style="position: relative;">
+        <canvas id="gameCanvas" width="1200" height="600"></canvas>
+        <div id="ammo-display">
+            <span style="color: #e74c3c;">🔴 弓箭: <span id="red-arrows">3</span>/3</span>
+            <span style="color: #3498db;">🔵 弓箭: <span id="blue-arrows">3</span>/3</span>
+        </div>
+    </div>
     
     <div id="controls">
         <div class="player-controls" id="red-controls">
             <h2>🔴 红色玩家</h2>
-            <p>移动: <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> (W跳跃)</p>
+            <p>移动: <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> (W跳跃,可连跳)</p>
             <p>剑攻击: <span class="key">1</span> | 弓箭: <span class="key">2</span></p>
-            <p>生命: <span id="red-hp">❤️❤️❤️</span></p>
+            <p>生命: <span id="red-hp">❤️❤️❤️❤️❤️❤️</span></p>
         </div>
         <div class="player-controls" id="blue-controls">
             <h2>🔵 蓝色玩家</h2>
-            <p>移动: <span class="key">↑</span><span class="key">←</span><span class="key">↓</span><span class="key">→</span> (↑跳跃)</p>
+            <p>移动: <span class="key">↑</span><span class="key">←</span><span class="key">↓</span><span class="key">→</span> (↑跳跃,可连跳)</p>
             <p>剑攻击: <span class="key">,</span> | 弓箭: <span class="key">.</span></p>
-            <p>生命: <span id="blue-hp">❤️❤️❤️</span></p>
+            <p>生命: <span id="blue-hp">❤️❤️❤️❤️❤️❤️</span></p>
         </div>
     </div>
     
@@ -119,7 +134,37 @@
         // 游戏状态
         let gameRunning = true;
         const gravity = 0.5;
-        const groundY = 350;
+        const groundY = 550;
+        
+        // 地图元素
+        const platforms = [
+            // 地面坑洞 (x, y, width, height, type)
+            {x: 0, y: groundY, width: 300, height: 50, type: 'ground'},
+            {x: 400, y: groundY, width: 400, height: 50, type: 'ground'},
+            {x: 900, y: groundY, width: 300, height: 50, type: 'ground'},
+            
+            // 踏板平台 - 左侧高台
+            {x: 100, y: 400, width: 150, height: 20, type: 'platform', jumpBoost: true},
+            {x: 50, y: 250, width: 120, height: 20, type: 'platform', jumpBoost: true},
+            
+            // 踏板平台 - 中间区域
+            {x: 500, y: 350, width: 200, height: 20, type: 'platform', jumpBoost: true},
+            {x: 550, y: 200, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            
+            // 踏板平台 - 右侧高台
+            {x: 950, y: 400, width: 150, height: 20, type: 'platform', jumpBoost: true},
+            {x: 1000, y: 250, width: 120, height: 20, type: 'platform', jumpBoost: true},
+            
+            // 普通平台（无弹跳加成）
+            {x: 300, y: 300, width: 100, height: 20, type: 'platform'},
+            {x: 800, y: 300, width: 100, height: 20, type: 'platform'},
+        ];
+        
+        // 坑洞（掉下去即死）
+        const pits = [
+            {x: 300, y: groundY, width: 100, height: 100},
+            {x: 800, y: groundY, width: 100, height: 100}
+        ];
         
         // 玩家对象
         const player1 = {
@@ -132,17 +177,23 @@
             vy: 0,
             speed: 5,
             jumpPower: -12,
-            hp: 3,
-            facing: 1, // 1右 -1左
+            hp: 6,
+            maxHp: 6,
+            facing: 1,
             attacking: false,
             attackTimer: 0,
-            attackType: '', // 'sword' 或 'bow'
+            attackType: '',
             onGround: false,
-            invincible: 0
+            invincible: 0,
+            arrowsLeft: 3,
+            maxArrows: 3,
+            swordLength: 5, // 5个单位长度
+            onPlatform: false,
+            jumpBoosted: false
         };
         
         const player2 = {
-            x: 650,
+            x: 1050,
             y: groundY - 40,
             width: 30,
             height: 40,
@@ -151,13 +202,19 @@
             vy: 0,
             speed: 5,
             jumpPower: -12,
-            hp: 3,
+            hp: 6,
+            maxHp: 6,
             facing: -1,
             attacking: false,
             attackTimer: 0,
             attackType: '',
             onGround: false,
-            invincible: 0
+            invincible: 0,
+            arrowsLeft: 3,
+            maxArrows: 3,
+            swordLength: 5,
+            onPlatform: false,
+            jumpBoosted: false
         };
         
         // 箭矢数组
@@ -186,15 +243,20 @@
         // 红色玩家攻击
         function player1Attack(type) {
             if (player1.attacking) return;
+            
+            if (type === 'bow' && player1.arrowsLeft <= 0) return; // 没箭了
+            
             player1.attacking = true;
             player1.attackType = type;
-            player1.attackTimer = type === 'sword' ? 20 : 10;
+            player1.attackTimer = type === 'sword' ? 25 : 15;
             
             if (type === 'bow') {
+                player1.arrowsLeft--;
+                updateAmmo();
                 arrows.push({
                     x: player1.x + (player1.facing === 1 ? 30 : 0),
                     y: player1.y + 15,
-                    vx: player1.facing * 10,
+                    vx: player1.facing * 12,
                     vy: 0,
                     owner: 1,
                     color: '#e74c3c'
@@ -205,20 +267,33 @@
         // 蓝色玩家攻击
         function player2Attack(type) {
             if (player2.attacking) return;
+            
+            if (type === 'bow' && player2.arrowsLeft <= 0) return; // 没箭了
+            
             player2.attacking = true;
             player2.attackType = type;
-            player2.attackTimer = type === 'sword' ? 20 : 10;
+            player2.attackTimer = type === 'sword' ? 25 : 15;
             
             if (type === 'bow') {
+                player2.arrowsLeft--;
+                updateAmmo();
                 arrows.push({
                     x: player2.x + (player2.facing === 1 ? 30 : 0),
                     y: player2.y + 15,
-                    vx: player2.facing * 10,
+                    vx: player2.facing * 12,
                     vy: 0,
                     owner: 2,
                     color: '#3498db'
                 });
             }
+        }
+        
+        // 碰撞检测
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
         }
         
         // 更新游戏
@@ -236,9 +311,23 @@
                 player1.vx *= 0.8;
             }
             
-            if ((keys['w'] || keys['W']) && player1.onGround) {
-                player1.vy = player1.jumpPower;
-                player1.onGround = false;
+            // 红色跳跃 (W) - 允许连跳
+            if ((keys['w'] || keys['W']) && !player1.jumpKeyHeld) {
+                if (player1.onGround || player1.onPlatform) {
+                    player1.vy = player1.jumpPower;
+                    player1.onGround = false;
+                    player1.onPlatform = false;
+                    player1.jumpKeyHeld = true;
+                    
+                    // 踏板弹跳加成
+                    if (player1.jumpBoosted) {
+                        player1.vy *= 1.5; // 跳得更高
+                        player1.jumpBoosted = false;
+                    }
+                }
+            }
+            if (!(keys['w'] || keys['W'])) {
+                player1.jumpKeyHeld = false;
             }
             
             // 蓝色玩家移动 (方向键)
@@ -252,9 +341,23 @@
                 player2.vx *= 0.8;
             }
             
-            if (keys['ArrowUp'] && player2.onGround) {
-                player2.vy = player2.jumpPower;
-                player2.onGround = false;
+            // 蓝色跳跃 (↑) - 允许连跳
+            if (keys['ArrowUp'] && !player2.jumpKeyHeld) {
+                if (player2.onGround || player2.onPlatform) {
+                    player2.vy = player2.jumpPower;
+                    player2.onGround = false;
+                    player2.onPlatform = false;
+                    player2.jumpKeyHeld = true;
+                    
+                    // 踏板弹跳加成
+                    if (player2.jumpBoosted) {
+                        player2.vy *= 1.5;
+                        player2.jumpBoosted = false;
+                    }
+                }
+            }
+            if (!keys['ArrowUp']) {
+                player2.jumpKeyHeld = false;
             }
             
             // 物理更新
@@ -263,15 +366,42 @@
                 p.x += p.vx;
                 p.y += p.vy;
                 
-                // 地面碰撞
-                if (p.y + p.height > groundY) {
-                    p.y = groundY - p.height;
-                    p.vy = 0;
-                    p.onGround = true;
-                }
+                p.onGround = false;
+                p.onPlatform = false;
+                p.jumpBoosted = false;
+                
+                // 平台碰撞检测
+                platforms.forEach(plat => {
+                    if (checkCollision(p, plat)) {
+                        // 从上方落下
+                        if (p.vy > 0 && p.y + p.height - p.vy <= plat.y + 10) {
+                            p.y = plat.y - p.height;
+                            p.vy = 0;
+                            
+                            if (plat.type === 'ground') {
+                                p.onGround = true;
+                            } else {
+                                p.onPlatform = true;
+                                if (plat.jumpBoost) {
+                                    p.jumpBoosted = true; // 标记可以高跳
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // 坑洞检测（掉下去即死）
+                pits.forEach(pit => {
+                    if (p.x > pit.x && p.x + p.width < pit.x + pit.width && p.y > groundY) {
+                        p.hp = 0;
+                        updateHP();
+                        checkWin();
+                    }
+                });
                 
                 // 边界限制
-                p.x = Math.max(0, Math.min(canvas.width - p.width, p.x));
+                if (p.x < 0) p.x = 0;
+                if (p.x > canvas.width - p.width) p.x = canvas.width - p.width;
                 
                 // 无敌时间递减
                 if (p.invincible > 0) p.invincible--;
@@ -280,6 +410,13 @@
                 if (p.attackTimer > 0) {
                     p.attackTimer--;
                     if (p.attackTimer === 0) p.attacking = false;
+                }
+                
+                // 防止掉出画布底部
+                if (p.y > canvas.height) {
+                    p.hp = 0;
+                    updateHP();
+                    checkWin();
                 }
             });
             
@@ -293,9 +430,19 @@
                 arrow.x += arrow.vx;
                 arrow.y += arrow.vy;
                 
+                // 箭矢与平台碰撞
+                let hitPlatform = false;
+                platforms.forEach(plat => {
+                    if (arrow.x > plat.x && arrow.x < plat.x + plat.width &&
+                        arrow.y > plat.y && arrow.y < plat.y + plat.height) {
+                        hitPlatform = true;
+                    }
+                });
+                
                 // 检测击中玩家
                 let target = arrow.owner === 1 ? player2 : player1;
-                if (arrow.x > target.x && arrow.x < target.x + target.width &&
+                if (!hitPlatform && 
+                    arrow.x > target.x && arrow.x < target.x + target.width &&
                     arrow.y > target.y && arrow.y < target.y + target.height) {
                     if (target.invincible === 0) {
                         target.hp--;
@@ -307,31 +454,34 @@
                     continue;
                 }
                 
-                // 移除超出边界的箭
-                if (arrow.x < 0 || arrow.x > canvas.width) {
+                // 移除超出边界或击中平台的箭
+                if (arrow.x < 0 || arrow.x > canvas.width || hitPlatform) {
                     arrows.splice(i, 1);
                 }
             }
         }
         
-        // 剑攻击检测
+        // 剑攻击检测 - 长度5个单位，更帅气
         function checkSwordHit(attacker, target) {
             if (!attacker.attacking || attacker.attackType !== 'sword') return;
-            if (attacker.attackTimer !== 15) return; // 只在攻击中段检测
+            if (attacker.attackTimer !== 18) return; // 只在攻击前段检测
             
-            let attackRange = 50;
-            let attackX = attacker.facing === 1 ? attacker.x + attacker.width : attacker.x - attackRange;
-            let attackY = attacker.y;
+            // 剑长5个单位 (每个单位10像素，总长50像素)
+            const swordLength = 50;
+            const swordWidth = 12;
+            
+            let attackX = attacker.facing === 1 ? attacker.x + attacker.width : attacker.x - swordLength;
+            let attackY = attacker.y + 10;
             
             // 检测碰撞
-            if (attackX < target.x + target.width && attackX + attackRange > target.x &&
-                attackY < target.y + target.height && attackY + 30 > target.y) {
+            if (attackX < target.x + target.width && attackX + swordLength > target.x &&
+                attackY < target.y + target.height && attackY + swordWidth > target.y) {
                 if (target.invincible === 0) {
                     target.hp--;
                     target.invincible = 60;
-                    // 击退效果
-                    target.vx = attacker.facing * 8;
-                    target.vy = -5;
+                    // 强力击退效果
+                    target.vx = attacker.facing * 12;
+                    target.vy = -8;
                     updateHP();
                     checkWin();
                 }
@@ -344,11 +494,52 @@
             ctx.fillStyle = '#0f3460';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 绘制地面
-            ctx.fillStyle = '#2ecc71';
-            ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
-            ctx.fillStyle = '#27ae60';
-            ctx.fillRect(0, groundY, canvas.width, 5);
+            // 绘制背景装饰
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            for(let i=0; i<10; i++) {
+                ctx.fillRect(i*150, 100 + Math.sin(i)*50, 80, 80);
+            }
+            
+            // 绘制坑洞（黑色深渊）
+            ctx.fillStyle = '#000';
+            pits.forEach(pit => {
+                ctx.fillRect(pit.x, pit.y, pit.width, canvas.height - pit.y);
+                // 深渊边缘警告
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(pit.x, pit.y, 5, 10);
+                ctx.fillRect(pit.x + pit.width - 5, pit.y, 5, 10);
+                ctx.fillStyle = '#000';
+            });
+            
+            // 绘制平台
+            platforms.forEach(plat => {
+                if (plat.type === 'ground') {
+                    // 地面
+                    ctx.fillStyle = '#2ecc71';
+                    ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+                    ctx.fillStyle = '#27ae60';
+                    ctx.fillRect(plat.x, plat.y, plat.width, 5);
+                } else {
+                    // 踏板平台
+                    if (plat.jumpBoost) {
+                        // 弹跳踏板 - 金色发光效果
+                        ctx.fillStyle = '#f1c40f';
+                        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+                        ctx.fillStyle = '#f39c12';
+                        ctx.fillRect(plat.x, plat.y + 15, plat.width, 5);
+                        // 箭头指示
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '16px Arial';
+                        ctx.fillText('↑', plat.x + plat.width/2 - 8, plat.y - 5);
+                    } else {
+                        // 普通平台
+                        ctx.fillStyle = '#95a5a6';
+                        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+                        ctx.fillStyle = '#7f8c8d';
+                        ctx.fillRect(plat.x, plat.y + 15, plat.width, 5);
+                    }
+                }
+            });
             
             // 绘制玩家
             drawPlayer(player1);
@@ -356,16 +547,39 @@
             
             // 绘制箭矢
             arrows.forEach(arrow => {
+                ctx.save();
+                ctx.translate(arrow.x, arrow.y);
+                ctx.rotate(arrow.vx > 0 ? 0 : Math.PI);
+                
+                // 箭杆
                 ctx.fillStyle = arrow.color;
+                ctx.fillRect(-10, -2, 20, 4);
+                
+                // 箭头
                 ctx.beginPath();
-                ctx.moveTo(arrow.x, arrow.y);
-                ctx.lineTo(arrow.x - arrow.vx * 2, arrow.y - 3);
-                ctx.lineTo(arrow.x - arrow.vx * 2, arrow.y + 3);
+                ctx.moveTo(10, -4);
+                ctx.lineTo(18, 0);
+                ctx.lineTo(10, 4);
                 ctx.fill();
+                
+                // 箭羽
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.moveTo(-10, -2);
+                ctx.lineTo(-15, -6);
+                ctx.lineTo(-12, -2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(-10, 2);
+                ctx.lineTo(-15, 6);
+                ctx.lineTo(-12, 2);
+                ctx.fill();
+                
+                ctx.restore();
             });
         }
         
-        // 绘制玩家
+        // 绘制玩家 - 更帅气的剑
         function drawPlayer(p) {
             ctx.save();
             
@@ -378,6 +592,10 @@
             ctx.fillStyle = p.color;
             ctx.fillRect(p.x, p.y, p.width, p.height);
             
+            // 头盔/头部装饰
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fillRect(p.x + 5, p.y + 5, p.width - 10, 10);
+            
             // 眼睛
             ctx.fillStyle = 'white';
             let eyeX = p.facing === 1 ? p.x + 20 : p.x + 5;
@@ -385,57 +603,128 @@
             ctx.fillStyle = 'black';
             ctx.fillRect(eyeX + (p.facing === 1 ? 2 : 0), p.y + 9, 3, 3);
             
-            // 左手剑
-            ctx.fillStyle = '#95a5a6';
+            // 帅气的长剑（长度5个单位 = 50像素）
+            const swordLength = 50;
+            
             if (p.attacking && p.attackType === 'sword') {
-                // 攻击动画
+                // 攻击动画 - 挥剑轨迹
                 ctx.save();
-                ctx.translate(p.x + p.width/2, p.y + 20);
-                ctx.rotate(p.facing === 1 ? -Math.PI/4 : Math.PI/4);
-                ctx.fillRect(0, -5, 40, 10);
-                // 剑刃
+                ctx.translate(p.x + p.width/2, p.y + 25);
+                
+                // 根据攻击进度计算角度
+                let progress = (25 - p.attackTimer) / 25;
+                let angle = p.facing === 1 ? 
+                    -Math.PI/3 + progress * Math.PI/1.5 : 
+                    Math.PI/3 - progress * Math.PI/1.5;
+                
+                ctx.rotate(angle);
+                
+                // 剑光效果
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.arc(0, 0, swordLength/2, -Math.PI/4, Math.PI/4);
+                ctx.stroke();
+                
+                // 剑柄
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(-5, -3, 15, 6);
+                
+                // 护手
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillRect(8, -8, 6, 16);
+                
+                // 剑刃（5单位长度）
                 ctx.fillStyle = '#bdc3c7';
-                ctx.fillRect(5, -3, 30, 6);
+                ctx.fillRect(12, -4, swordLength, 8);
+                
+                // 剑刃高光
+                ctx.fillStyle = '#ecf0f1';
+                ctx.fillRect(12, -2, swordLength, 3);
+                
+                // 剑尖
+                ctx.fillStyle = '#bdc3c7';
+                ctx.beginPath();
+                ctx.moveTo(12 + swordLength, -4);
+                ctx.lineTo(12 + swordLength + 8, 0);
+                ctx.lineTo(12 + swordLength, 4);
+                ctx.fill();
+                
                 ctx.restore();
             } else {
                 // 持剑姿势
-                ctx.fillRect(p.x + (p.facing === 1 ? -5 : 25), p.y + 15, 10, 25);
+                ctx.save();
+                ctx.translate(p.x + (p.facing === 1 ? 25 : 5), p.y + 20);
+                ctx.rotate(p.facing === 1 ? 0 : Math.PI);
+                
+                // 剑柄
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(-5, -3, 15, 6);
+                
+                // 护手
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillRect(8, -8, 6, 16);
+                
+                // 剑刃（5单位长度）
+                ctx.fillStyle = '#95a5a6';
+                ctx.fillRect(12, -4, swordLength, 8);
+                
+                // 剑刃高光
+                ctx.fillStyle = '#bdc3c7';
+                ctx.fillRect(12, -2, swordLength, 3);
+                
+                // 剑尖
+                ctx.fillStyle = '#95a5a6';
+                ctx.beginPath();
+                ctx.moveTo(12 + swordLength, -4);
+                ctx.lineTo(12 + swordLength + 8, 0);
+                ctx.lineTo(12 + swordLength, 4);
+                ctx.fill();
+                
+                ctx.restore();
             }
             
-            // 右手弓
-            ctx.fillStyle = '#8b4513';
-            if (p.attacking && p.attackType === 'bow') {
-                // 拉弓姿势
-                ctx.beginPath();
-                ctx.arc(p.x + (p.facing === 1 ? 35 : -5), p.y + 20, 15, -Math.PI/2, Math.PI/2);
-                ctx.strokeStyle = '#8b4513';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                // 弓弦
-                ctx.beginPath();
-                ctx.moveTo(p.x + (p.facing === 1 ? 35 : -5), p.y + 5);
-                ctx.lineTo(p.x + (p.facing === 1 ? 20 : 10), p.y + 20);
-                ctx.lineTo(p.x + (p.facing === 1 ? 35 : -5), p.y + 35);
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            } else {
-                // 背弓
-                ctx.fillRect(p.x + (p.facing === 1 ? 25 : -5), p.y + 5, 5, 20);
-            }
+            // 弓（背在身后）
+            ctx.strokeStyle = '#8b4513';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(p.x + (p.facing === 1 ? -5 : 35), p.y + 20, 12, Math.PI/2, -Math.PI/2, true);
+            ctx.stroke();
+            
+            // 弓弦
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p.x + (p.facing === 1 ? -5 : 35), p.y + 8);
+            ctx.lineTo(p.x + (p.facing === 1 ? -5 : 35), p.y + 32);
+            ctx.stroke();
             
             // 生命指示器
             ctx.fillStyle = 'white';
-            ctx.font = '12px Arial';
-            ctx.fillText('HP:' + p.hp, p.x, p.y - 5);
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText('HP:' + p.hp, p.x - 5, p.y - 8);
+            
+            // 弹药指示（小图标）
+            if (p.arrowsLeft > 0) {
+                ctx.fillStyle = '#f1c40f';
+                for(let i=0; i<p.arrowsLeft; i++) {
+                    ctx.fillRect(p.x + i*8, p.y - 20, 6, 3);
+                }
+            }
             
             ctx.restore();
         }
         
         // 更新生命显示
         function updateHP() {
-            document.getElementById('red-hp').textContent = '❤️'.repeat(player1.hp) + '🖤'.repeat(3-player1.hp);
-            document.getElementById('blue-hp').textContent = '❤️'.repeat(player2.hp) + '🖤'.repeat(3-player2.hp);
+            document.getElementById('red-hp').textContent = '❤️'.repeat(player1.hp) + '🖤'.repeat(player1.maxHp-player1.hp);
+            document.getElementById('blue-hp').textContent = '❤️'.repeat(player2.hp) + '🖤'.repeat(player2.maxHp-player2.hp);
+        }
+        
+        // 更新弹药显示
+        function updateAmmo() {
+            document.getElementById('red-arrows').textContent = player1.arrowsLeft;
+            document.getElementById('blue-arrows').textContent = player2.arrowsLeft;
         }
         
         // 检查胜利
@@ -456,24 +745,33 @@
         
         // 重置游戏
         function resetGame() {
+            // 重置玩家1
             player1.x = 150;
             player1.y = groundY - 40;
-            player1.hp = 3;
+            player1.hp = player1.maxHp;
             player1.vx = 0;
             player1.vy = 0;
             player1.facing = 1;
+            player1.arrowsLeft = player1.maxArrows;
+            player1.attacking = false;
+            player1.attackTimer = 0;
             
-            player2.x = 650;
+            // 重置玩家2
+            player2.x = 1050;
             player2.y = groundY - 40;
-            player2.hp = 3;
+            player2.hp = player2.maxHp;
             player2.vx = 0;
             player2.vy = 0;
             player2.facing = -1;
+            player2.arrowsLeft = player2.maxArrows;
+            player2.attacking = false;
+            player2.attackTimer = 0;
             
             arrows = [];
             gameRunning = true;
             document.getElementById('gameOver').style.display = 'none';
             updateHP();
+            updateAmmo();
         }
         
         // 游戏循环
