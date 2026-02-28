@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>转刀侠 - 幸存者</title>
+    <title>转刀侠 - 橙色风暴</title>
     <style>
         * {
             margin: 0;
@@ -13,6 +13,7 @@
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
@@ -23,15 +24,12 @@
             min-height: 100vh;
             font-family: 'Microsoft YaHei', sans-serif;
             overflow: hidden;
-            touch-action: none;
         }
         
         #gameContainer {
             position: relative;
             width: 100%;
             height: 100vh;
-            max-width: 100vw;
-            max-height: 100vh;
             overflow: hidden;
         }
         
@@ -54,10 +52,14 @@
         
         .stat {
             margin: 3px 0;
-            color: #ffd700;
             font-weight: bold;
             text-shadow: 1px 1px 2px black;
         }
+        
+        .health-stat { color: #ff6b6b; }
+        .score-stat { color: #ffd93d; }
+        .level-stat { color: #6bcf7f; }
+        .kill-stat { color: #ff8c42; }
         
         #gameOver, #startScreen {
             position: absolute;
@@ -65,50 +67,54 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(0,0,0,0.95);
-            padding: 30px;
+            padding: 40px;
             border-radius: 20px;
             text-align: center;
             color: white;
-            border: 3px solid #e94560;
+            border: 3px solid #ff8c42;
             z-index: 100;
-            min-width: 300px;
-            box-shadow: 0 0 30px rgba(233, 69, 96, 0.5);
+            min-width: 320px;
+            box-shadow: 0 0 40px rgba(255, 140, 66, 0.6);
         }
         
-        #gameOver {
-            display: none;
-        }
+        #gameOver { display: none; }
         
         h1 {
-            color: #e94560;
-            margin-bottom: 15px;
-            font-size: 36px;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            color: #ff8c42;
+            margin-bottom: 20px;
+            font-size: 42px;
+            text-shadow: 0 0 20px rgba(255, 140, 66, 0.8);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
         
         h2 {
-            color: #e94560;
-            margin-bottom: 15px;
-            font-size: 28px;
+            color: #ff8c42;
+            margin-bottom: 20px;
+            font-size: 32px;
         }
         
         button {
             margin-top: 20px;
             padding: 15px 40px;
             font-size: 20px;
-            background: linear-gradient(45deg, #e94560, #ff6b6b);
+            background: linear-gradient(45deg, #ff8c42, #ffa94d);
             color: white;
             border: none;
             border-radius: 30px;
             cursor: pointer;
-            transition: all 0.3s;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 140, 66, 0.4);
+            transition: all 0.3s;
         }
         
-        button:hover, button:active {
+        button:hover {
             transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.6);
+            box-shadow: 0 6px 25px rgba(255, 140, 66, 0.6);
         }
         
         .controls {
@@ -118,80 +124,112 @@
             line-height: 2;
         }
         
-        .warning {
-            color: #e94560;
-            font-size: 12px;
-            margin-top: 10px;
-        }
-        
-        /* 虚拟摇杆样式 */
+        /* 优化的虚拟摇杆 - 更大更灵敏 */
         #joystick-zone {
             position: absolute;
-            bottom: 100px;
-            left: 100px;
-            width: 150px;
-            height: 150px;
+            bottom: 80px;
+            left: 80px;
+            width: 200px;
+            height: 200px;
             z-index: 50;
             display: none;
         }
         
         .joystick-base {
             position: absolute;
-            width: 120px;
-            height: 120px;
-            background: rgba(255,255,255,0.1);
-            border: 3px solid rgba(255,255,255,0.3);
+            width: 160px;
+            height: 160px;
+            background: rgba(255, 140, 66, 0.15);
+            border: 4px solid rgba(255, 140, 66, 0.4);
             border-radius: 50%;
             transform: translate(-50%, -50%);
+            box-shadow: 0 0 30px rgba(255, 140, 66, 0.3);
         }
         
         .joystick-stick {
             position: absolute;
-            width: 50px;
-            height: 50px;
-            background: rgba(233, 69, 96, 0.6);
-            border: 2px solid rgba(255,255,255,0.5);
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #ff8c42, #ff6b35);
+            border: 3px solid rgba(255,255,255,0.6);
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            box-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+            box-shadow: 0 0 25px rgba(255, 140, 66, 0.8);
+            transition: transform 0.05s;
+        }
+        
+        .joystick-stick.active {
+            background: linear-gradient(135deg, #ffa94d, #ff8c42);
+            box-shadow: 0 0 35px rgba(255, 165, 77, 1);
+        }
+        
+        /* 全屏触摸指示器 */
+        #touch-indicator {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 140, 66, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 40;
+            transform: translate(-50%, -50%);
+        }
+        
+        #touch-indicator.active {
+            opacity: 1;
+            background: rgba(255, 140, 66, 0.2);
         }
         
         #difficulty-indicator {
             position: absolute;
             top: 10px;
             right: 10px;
-            color: #ff6b6b;
+            color: #ff8c42;
             font-size: 18px;
             font-weight: bold;
             text-shadow: 2px 2px 4px black;
             z-index: 10;
         }
         
-        .elite-warning {
+        .warning {
             position: absolute;
-            top: 50%;
+            top: 40%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #ff0000;
-            font-size: 48px;
+            color: #ff6b6b;
+            font-size: 36px;
             font-weight: bold;
-            text-shadow: 0 0 20px red;
+            text-shadow: 0 0 30px rgba(255, 107, 107, 0.8);
             opacity: 0;
             pointer-events: none;
             z-index: 90;
-            transition: opacity 0.3s;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .heal-notify {
+            position: absolute;
+            color: #00ff88;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 0 0 15px #00ff88;
+            pointer-events: none;
+            z-index: 80;
+            animation: floatUp 1.2s ease-out forwards;
+        }
+        
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
         }
         
         @media (max-width: 768px) {
-            #ui {
-                font-size: 14px;
-            }
-            h1 {
-                font-size: 28px;
-            }
-            #joystick-zone {
-                display: block;
-            }
+            #ui { font-size: 14px; }
+            h1 { font-size: 32px; }
+            #joystick-zone { display: block; }
         }
     </style>
 </head>
@@ -200,32 +238,33 @@
         <canvas id="gameCanvas"></canvas>
         
         <div id="ui">
-            <div class="stat">❤️ 生命值: <span id="health">100</span>/<span id="maxHealth">100</span></div>
-            <div class="stat">⭐ 分数: <span id="score">0</span></div>
-            <div class="stat">📊 等级: <span id="level">1</span></div>
-            <div class="stat">💀 击杀: <span id="kills">0</span></div>
-            <div class="stat">⏱️ 时间: <span id="time">0</span>秒</div>
+            <div class="stat health-stat">❤️ <span id="health">100</span>/<span id="maxHealth">100</span></div>
+            <div class="stat score-stat">⭐ <span id="score">0</span></div>
+            <div class="stat level-stat">📊 Lv.<span id="level">1</span></div>
+            <div class="stat kill-stat">💀 <span id="kills">0</span></div>
+            <div class="stat">⏱️ <span id="time">0</span>s</div>
         </div>
         
-        <div id="difficulty-indicator">难度: <span id="diffLevel">1</span></div>
+        <div id="difficulty-indicator">难度: <span id="diffLevel">1.0</span></div>
         
-        <div class="elite-warning" id="eliteWarning">精英怪来袭！</div>
+        <div class="warning" id="eliteWarning">⚠️ 精英怪来袭！</div>
+        
+        <div id="touch-indicator"></div>
         
         <div id="joystick-zone">
-            <div class="joystick-base" id="joystickBase"></div>
+            <div class="joystick-base"></div>
             <div class="joystick-stick" id="joystickStick"></div>
         </div>
         
         <div id="startScreen">
             <h1>⚔️ 转刀侠 ⚔️</h1>
-            <p>旋转武器，生存到底！</p>
-            <div class="warning">⚠️ 难度已大幅提升！</div>
-            <button onclick="startGame()">开始挑战</button>
+            <p>橙色风暴 | 爽快操作 | 热血战斗</p>
+            <button onclick="startGame()">开始冒险</button>
             <div class="controls">
                 <p>🎮 电脑: WASD / 方向键 移动</p>
-                <p>📱 手机: 左侧虚拟摇杆移动</p>
-                <p>⚡ 自动旋转攻击</p>
-                <p>💀 敌人会越来越强！</p>
+                <p>📱 手机: 左下角摇杆 或 全屏滑动</p>
+                <p>💚 收集绿色心形恢复生命</p>
+                <p>🔥 橙色主题 高端开朗</p>
             </div>
         </div>
         
@@ -243,13 +282,16 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-        // 设置画布大小
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
         resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+        });
         
         // 游戏状态
         let gameRunning = false;
@@ -259,25 +301,32 @@
         let kills = 0;
         let level = 1;
         let exp = 0;
-        let expToNext = 80;
+        let expToNext = 100;
         let difficultyMultiplier = 1;
-        let waveNumber = 1;
         
-        // 玩家对象 - 降低初始属性增加难度
+        // 橙色主题玩家
         const player = {
             x: canvas.width / 2,
             y: canvas.height / 2,
-            radius: 18,
-            speed: 2.5, // 降低基础速度
-            health: 80, // 降低初始生命
-            maxHealth: 80,
+            radius: 24,
+            speed: 4, // 增加基础速度
+            maxSpeed: 7, // 最大速度限制
+            health: 100,
+            maxHealth: 100,
             angle: 0,
             weapons: [],
             invincible: 0,
-            regenTimer: 0
+            animFrame: 0,
+            capeWave: 0,
+            glowIntensity: 0,
+            // 移动惯性
+            vx: 0,
+            vy: 0,
+            friction: 0.85,
+            acceleration: 0.8
         };
         
-        // 武器类 - 降低初始伤害
+        // 武器类 - 更帅的刀
         class Weapon {
             constructor(angle, distance, damage, speed) {
                 this.angle = angle;
@@ -285,18 +334,49 @@
                 this.damage = damage;
                 this.speed = speed;
                 this.trail = [];
-                this.size = 12;
+                this.particles = [];
+                this.size = 18;
+                this.rotation = 0;
+                this.type = 'katana'; // 武士刀风格
             }
             
             update() {
                 this.angle += this.speed;
-                this.trail.push({
-                    x: player.x + Math.cos(this.angle) * this.distance,
-                    y: player.y + Math.sin(this.angle) * this.distance,
-                    alpha: 1
+                this.rotation += 0.25;
+                
+                const x = player.x + Math.cos(this.angle) * this.distance;
+                const y = player.y + Math.sin(this.angle) * this.distance;
+                
+                // 更流畅的轨迹
+                this.trail.push({ x, y, alpha: 1, scale: 1, angle: this.angle });
+                if (this.trail.length > 15) this.trail.shift();
+                
+                this.trail.forEach((t, i) => {
+                    t.alpha -= 0.06;
+                    t.scale *= 0.97;
                 });
-                if (this.trail.length > 8) this.trail.shift();
-                this.trail.forEach(t => t.alpha -= 0.15);
+                
+                // 火花粒子
+                if (Math.random() < 0.4) {
+                    this.particles.push({
+                        x: x + (Math.random() - 0.5) * 25,
+                        y: y + (Math.random() - 0.5) * 25,
+                        vx: (Math.random() - 0.5) * 3,
+                        vy: (Math.random() - 0.5) * 3,
+                        life: 25,
+                        color: `hsl(${30 + Math.random() * 30}, 100%, ${60 + Math.random() * 20}%)`,
+                        size: Math.random() * 4 + 2
+                    });
+                }
+                
+                this.particles = this.particles.filter(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life--;
+                    p.vx *= 0.98;
+                    p.vy *= 0.98;
+                    return p.life > 0;
+                });
             }
             
             getPosition() {
@@ -307,35 +387,33 @@
             }
         }
         
-        // 初始化武器
         function initWeapons() {
             player.weapons = [];
             const weaponCount = 1 + Math.floor((level - 1) / 2);
             for (let i = 0; i < weaponCount; i++) {
                 player.weapons.push(new Weapon(
                     (Math.PI * 2 / weaponCount) * i,
-                    55,
-                    15 + level * 3, // 降低基础伤害
-                    0.1 + level * 0.005
+                    70,
+                    25 + level * 5,
+                    0.15
                 ));
             }
         }
         
         // 敌人类型
         const EnemyTypes = {
-            NORMAL: { color: '#e74c3c', health: 1, speed: 1, damage: 1, exp: 1, radius: 15 },
-            FAST: { color: '#f39c12', health: 0.6, speed: 1.8, damage: 0.8, exp: 1.2, radius: 12 },
-            TANK: { color: '#8e44ad', health: 3, speed: 0.6, damage: 1.5, exp: 2, radius: 22 },
-            ELITE: { color: '#c0392b', health: 5, speed: 1.2, damage: 2, exp: 5, radius: 25 },
-            BOSS: { color: '#2c3e50', health: 15, speed: 0.8, damage: 4, exp: 20, radius: 40 }
+            NORMAL: { color: '#e74c3c', healthMult: 1, speed: 1, damage: 1, exp: 1, radius: 16, rewardChance: 0.15 },
+            FAST: { color: '#f39c12', healthMult: 0.6, speed: 1.8, damage: 0.8, exp: 1.3, radius: 14, rewardChance: 0.2 },
+            TANK: { color: '#8e44ad', healthMult: 3, speed: 0.6, damage: 1.4, exp: 2.5, radius: 26, rewardChance: 0.4 },
+            ELITE: { color: '#c0392b', healthMult: 8, speed: 1.2, damage: 2.2, exp: 10, radius: 30, rewardChance: 1.0, healDrop: true },
+            BOSS: { color: '#2c3e50', healthMult: 25, speed: 0.95, damage: 5, exp: 40, radius: 50, rewardChance: 1.0, healDrop: true, multipleHeal: 3 }
         };
         
-        // 敌人类
         class Enemy {
             constructor(type = 'NORMAL', isElite = false) {
                 const config = EnemyTypes[type];
                 const side = Math.floor(Math.random() * 4);
-                const margin = 50;
+                const margin = 80;
                 
                 switch(side) {
                     case 0: this.x = Math.random() * canvas.width; this.y = -margin; break;
@@ -345,221 +423,314 @@
                 }
                 
                 this.type = type;
-                this.isElite = isElite;
+                this.isElite = isElite || type === 'ELITE' || type === 'BOSS';
                 
-                // 难度缩放
-                const scale = difficultyMultiplier * (isElite ? 2 : 1);
-                this.radius = config.radius * (type === 'BOSS' ? 1.5 : 1);
-                this.speed = config.speed * (1 + gameTime / 60000) * (isElite ? 1.3 : 1);
-                this.baseHealth = 25 * config.health * scale;
+                const scale = difficultyMultiplier * (this.isElite ? 2.5 : 1);
+                this.radius = config.radius * (type === 'BOSS' ? 1.2 : 1);
+                this.speed = config.speed * (1 + gameTime / 90000);
+                this.baseHealth = 35 * config.healthMult * scale;
                 this.health = this.baseHealth;
                 this.maxHealth = this.health;
-                this.damage = 15 * config.damage * scale;
-                this.expValue = Math.floor(10 * config.exp * scale);
-                this.color = isElite ? '#ff0000' : config.color;
+                this.damage = 15 * config.damage * (this.isElite ? 1.6 : 1);
+                this.expValue = Math.floor(20 * config.exp * scale);
+                this.color = config.color;
+                this.config = config;
                 
-                // 精英怪特效
                 this.pulse = 0;
                 this.angle = 0;
+                this.spawnScale = 0;
             }
             
             update() {
+                if (this.spawnScale < 1) this.spawnScale += 0.08;
+                
                 const dx = player.x - this.x;
                 const dy = player.y - this.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 
                 if (dist > 0) {
-                    // 精英怪和Boss有追踪加强
-                    let speedMod = 1;
+                    let speedMod = this.isElite ? 1.25 : 1;
                     if (this.type === 'ELITE' || this.type === 'BOSS') {
-                        speedMod = 1.2;
-                        this.angle += 0.05;
+                        this.angle += 0.06;
                     }
                     
                     this.x += (dx / dist) * this.speed * speedMod;
                     this.y += (dy / dist) * this.speed * speedMod;
                 }
                 
-                this.pulse += 0.1;
+                this.pulse += 0.08;
             }
             
             draw() {
                 ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.scale(this.spawnScale, this.spawnScale);
                 
-                // 精英怪发光效果
-                if (this.isElite || this.type === 'ELITE' || this.type === 'BOSS') {
-                    ctx.shadowBlur = 20 + Math.sin(this.pulse) * 10;
+                if (this.isElite) {
+                    ctx.shadowBlur = 30 + Math.sin(this.pulse) * 10;
                     ctx.shadowColor = this.color;
+                    
+                    ctx.strokeStyle = `rgba(255, 200, 100, ${0.4 + Math.sin(this.pulse) * 0.2})`;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    const ringRadius = this.radius + 12 + Math.sin(this.pulse * 2) * 4;
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (i / 6) * Math.PI * 2 + this.angle;
+                        ctx.lineTo(Math.cos(angle) * ringRadius, Math.sin(angle) * ringRadius);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
                 }
                 
-                // 身体
-                ctx.fillStyle = this.color;
                 if (this.type === 'BOSS') {
-                    // Boss绘制为多边形
+                    ctx.fillStyle = this.color;
                     ctx.beginPath();
-                    const sides = 6;
-                    for (let i = 0; i < sides; i++) {
-                        const angle = (i / sides) * Math.PI * 2 + this.angle;
-                        const r = this.radius * (0.8 + Math.sin(this.pulse + i) * 0.2);
-                        const x = this.x + Math.cos(angle) * r;
-                        const y = this.y + Math.sin(angle) * r;
-                        if (i === 0) ctx.moveTo(x, y);
-                        else ctx.lineTo(x, y);
+                    const spikes = 10;
+                    for (let i = 0; i < spikes * 2; i++) {
+                        const angle = (i / (spikes * 2)) * Math.PI * 2 + this.angle * 0.3;
+                        const r = i % 2 === 0 ? this.radius : this.radius * 0.5;
+                        ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
                     }
                     ctx.closePath();
                     ctx.fill();
-                } else {
+                    
+                    ctx.fillStyle = '#ff6b6b';
                     ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.arc(0, 0, this.radius * 0.35, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    const grad = ctx.createRadialGradient(-6, -6, 0, 0, 0, this.radius);
+                    grad.addColorStop(0, lightenColor(this.color, 40));
+                    grad.addColorStop(1, this.color);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                     ctx.fill();
                 }
                 
                 ctx.shadowBlur = 0;
                 
-                // 眼睛
-                ctx.fillStyle = 'white';
                 const eyeOffset = this.radius * 0.3;
+                ctx.fillStyle = '#fff';
                 ctx.beginPath();
-                ctx.arc(this.x - eyeOffset, this.y - eyeOffset * 0.5, this.radius * 0.25, 0, Math.PI * 2);
-                ctx.arc(this.x + eyeOffset, this.y - eyeOffset * 0.5, this.radius * 0.25, 0, Math.PI * 2);
+                ctx.arc(-eyeOffset, -eyeOffset * 0.3, this.radius * 0.22, 0, Math.PI * 2);
+                ctx.arc(eyeOffset, -eyeOffset * 0.3, this.radius * 0.22, 0, Math.PI * 2);
                 ctx.fill();
                 
-                ctx.fillStyle = 'black';
+                ctx.fillStyle = '#000';
                 ctx.beginPath();
-                ctx.arc(this.x - eyeOffset, this.y - eyeOffset * 0.5, this.radius * 0.1, 0, Math.PI * 2);
-                ctx.arc(this.x + eyeOffset, this.y - eyeOffset * 0.5, this.radius * 0.1, 0, Math.PI * 2);
+                ctx.arc(-eyeOffset, -eyeOffset * 0.3, this.radius * 0.1, 0, Math.PI * 2);
+                ctx.arc(eyeOffset, -eyeOffset * 0.3, this.radius * 0.1, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // 精英怪标记
-                if (this.isElite) {
+                if (this.isElite && this.type !== 'BOSS') {
                     ctx.fillStyle = '#ffd700';
-                    ctx.font = 'bold 16px Arial';
+                    ctx.font = `bold ${this.radius}px Arial`;
                     ctx.textAlign = 'center';
-                    ctx.fillText('★', this.x, this.y - this.radius - 5);
+                    ctx.fillText('★', 0, -this.radius - 8);
                 }
                 
                 ctx.restore();
                 
-                // 血条
-                const barWidth = Math.min(60, this.radius * 3);
-                const barHeight = 5;
-                const barY = this.y - this.radius - 12;
+                const barWidth = this.isElite ? 90 : 55;
+                const barHeight = this.isElite ? 10 : 6;
+                const barY = this.y - this.radius - (this.isElite ? 25 : 18);
                 
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(this.x - barWidth/2, barY, barWidth, barHeight);
+                ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                ctx.fillRect(this.x - barWidth/2 - 2, barY - 2, barWidth + 4, barHeight + 4);
                 
                 const healthPercent = this.health / this.maxHealth;
-                ctx.fillStyle = healthPercent > 0.6 ? '#2ecc71' : healthPercent > 0.3 ? '#f1c40f' : '#e74c3c';
+                ctx.fillStyle = healthPercent > 0.6 ? '#00ff88' : healthPercent > 0.3 ? '#ffd700' : '#ff0040';
                 ctx.fillRect(this.x - barWidth/2, barY, barWidth * healthPercent, barHeight);
                 
-                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(this.x - barWidth/2, barY, barWidth, barHeight);
+                if (this.isElite) {
+                    ctx.strokeStyle = '#ffd700';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(this.x - barWidth/2, barY, barWidth, barHeight);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 13px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${Math.floor(this.health)}/${Math.floor(this.maxHealth)}`, this.x, barY - 10);
+                }
             }
         }
         
-        // 经验球类
-        class ExpOrb {
-            constructor(x, y, value) {
+        // 补血道具
+        class HealItem {
+            constructor(x, y, amount = 35) {
                 this.x = x;
                 this.y = y;
-                this.value = value;
-                this.radius = 5;
-                this.vx = (Math.random() - 0.5) * 3;
-                this.vy = (Math.random() - 0.5) * 3;
-                this.life = 400;
+                this.amount = amount;
+                this.radius = 14;
+                this.bobOffset = Math.random() * Math.PI * 2;
+                this.life = 800;
                 this.magnetRange = 200;
+                this.rotation = 0;
             }
             
             update() {
+                this.bobOffset += 0.06;
+                this.rotation += 0.02;
+                this.life--;
+                
                 const dx = player.x - this.x;
                 const dy = player.y - this.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 
                 if (dist < this.magnetRange && dist > 0) {
-                    const force = (this.magnetRange - dist) / this.magnetRange;
-                    this.x += (dx / dist) * 8 * force;
-                    this.y += (dy / dist) * 8 * force;
-                } else {
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    this.vx *= 0.95;
-                    this.vy *= 0.95;
+                    const force = Math.pow((this.magnetRange - dist) / this.magnetRange, 2) * 8;
+                    this.x += (dx / dist) * force;
+                    this.y += (dy / dist) * force;
                 }
-                
-                this.life--;
             }
             
             draw() {
-                const alpha = Math.min(1, this.life / 60);
+                const bobY = Math.sin(this.bobOffset) * 6;
+                const alpha = Math.min(1, this.life / 100);
+                
                 ctx.save();
                 ctx.globalAlpha = alpha;
-                ctx.fillStyle = '#00d2ff';
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#00d2ff';
+                ctx.translate(this.x, this.y + bobY);
+                ctx.rotate(this.rotation);
+                
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = '#00ff88';
+                
+                ctx.fillStyle = 'rgba(0, 255, 136, 0.2)';
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.arc(0, 0, this.radius + 8, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // 内部高光
-                ctx.fillStyle = '#ffffff';
+                // 心形
+                ctx.fillStyle = '#00ff88';
                 ctx.beginPath();
-                ctx.arc(this.x - 2, this.y - 2, this.radius * 0.4, 0, Math.PI * 2);
+                const topCurveHeight = this.radius * 0.3;
+                ctx.moveTo(0, topCurveHeight);
+                ctx.bezierCurveTo(-this.radius, -this.radius * 0.5, -this.radius, -this.radius * 0.8, 0, -this.radius * 0.2);
+                ctx.bezierCurveTo(this.radius, -this.radius * 0.8, this.radius, -this.radius * 0.5, 0, topCurveHeight);
+                ctx.fill();
+                
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.beginPath();
+                ctx.arc(-this.radius * 0.3, -this.radius * 0.4, this.radius * 0.25, 0, Math.PI * 2);
                 ctx.fill();
                 
                 ctx.restore();
             }
         }
         
-        // 伤害数字类
+        class ExpOrb {
+            constructor(x, y, value) {
+                this.x = x;
+                this.y = y;
+                this.value = value;
+                this.radius = 7;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.life = 600;
+                this.magnetRange = 200;
+                this.pulse = 0;
+            }
+            
+            update() {
+                this.pulse += 0.1;
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < this.magnetRange && dist > 0) {
+                    const force = Math.pow((this.magnetRange - dist) / this.magnetRange, 2) * 10;
+                    this.x += (dx / dist) * force;
+                    this.y += (dy / dist) * force;
+                } else {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vx *= 0.94;
+                    this.vy *= 0.94;
+                }
+                
+                this.life--;
+            }
+            
+            draw() {
+                const alpha = Math.min(1, this.life / 80);
+                const scale = 1 + Math.sin(this.pulse) * 0.1;
+                
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.translate(this.x, this.y);
+                ctx.scale(scale, scale);
+                
+                ctx.fillStyle = '#ff8c42';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#ff8c42';
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(-3, -3, this.radius * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+        
         class DamageText {
             constructor(x, y, damage, isCrit = false) {
                 this.x = x;
                 this.y = y;
                 this.damage = damage;
-                this.life = 40;
+                this.life = 45;
                 this.vy = -3;
                 this.isCrit = isCrit;
-                this.scale = isCrit ? 1.5 : 1;
+                this.scale = isCrit ? 2 : 1;
+                this.vx = (Math.random() - 0.5) * 3;
             }
             
             update() {
+                this.x += this.vx;
                 this.y += this.vy;
-                this.vy *= 0.95;
+                this.vy *= 0.92;
                 this.life--;
-                this.scale *= 0.98;
+                this.scale *= 0.985;
             }
             
             draw() {
                 ctx.save();
-                ctx.globalAlpha = this.life / 40;
-                ctx.fillStyle = this.isCrit ? '#ff0000' : '#ffeb3b';
-                ctx.font = `bold ${this.isCrit ? 28 : 20}px Arial`;
+                ctx.globalAlpha = this.life / 45;
+                ctx.fillStyle = this.isCrit ? '#ff0040' : '#ffaa00';
+                ctx.font = `bold ${this.isCrit ? 36 : 24}px Arial`;
                 ctx.textAlign = 'center';
+                ctx.translate(this.x, this.y);
                 ctx.scale(this.scale, this.scale);
-                ctx.fillText(this.damage, this.x / this.scale, this.y / this.scale);
+                ctx.fillText(this.damage, 0, 0);
+                
                 if (this.isCrit) {
                     ctx.strokeStyle = '#ffffff';
                     ctx.lineWidth = 2;
-                    ctx.strokeText(this.damage, this.x / this.scale, this.y / this.scale);
+                    ctx.strokeText(this.damage, 0, 0);
                 }
                 ctx.restore();
             }
         }
         
-        // 粒子效果类
         class Particle {
-            constructor(x, y, color, speed = 1) {
+            constructor(x, y, color, speed = 1, size = null) {
                 this.x = x;
                 this.y = y;
                 const angle = Math.random() * Math.PI * 2;
-                const velocity = Math.random() * 6 * speed;
+                const velocity = Math.random() * 8 * speed;
                 this.vx = Math.cos(angle) * velocity;
                 this.vy = Math.sin(angle) * velocity;
-                this.life = 25;
+                this.life = 35;
                 this.color = color;
-                this.size = Math.random() * 5 + 3;
-                this.decay = Math.random() * 0.5 + 0.5;
+                this.size = size || Math.random() * 6 + 3;
+                this.decay = Math.random() * 0.4 + 0.6;
+                this.rotation = Math.random() * Math.PI;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.3;
             }
             
             update() {
@@ -568,15 +739,16 @@
                 this.vx *= 0.95;
                 this.vy *= 0.95;
                 this.life -= this.decay;
-                this.size *= 0.95;
+                this.size *= 0.96;
+                this.rotation += this.rotationSpeed;
             }
             
             draw() {
                 ctx.save();
-                ctx.globalAlpha = Math.max(0, this.life / 25);
+                ctx.globalAlpha = Math.max(0, this.life / 35);
                 ctx.fillStyle = this.color;
                 ctx.translate(this.x, this.y);
-                ctx.rotate(this.life * 0.1);
+                ctx.rotate(this.rotation);
                 ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
                 ctx.restore();
             }
@@ -584,138 +756,168 @@
         
         let enemies = [];
         let expOrbs = [];
+        let healItems = [];
         let damageTexts = [];
         let particles = [];
         let keys = {};
         
-        // 键盘控制
-        document.addEventListener('keydown', (e) => {
-            keys[e.key.toLowerCase()] = true;
-        });
-        
-        document.addEventListener('keyup', (e) => {
-            keys[e.key.toLowerCase()] = false;
-        });
-        
-        // 触摸/虚拟摇杆控制
-        let joystick = {
-            active: false,
-            startX: 0,
-            startY: 0,
-            moveX: 0,
-            moveY: 0,
+        // 优化的输入系统
+        const Input = {
             dx: 0,
-            dy: 0
+            dy: 0,
+            active: false,
+            touchId: null,
+            joystick: { active: false, x: 0, y: 0, originX: 0, originY: 0 },
+            
+            reset() {
+                this.dx = 0;
+                this.dy = 0;
+                this.active = false;
+            }
         };
         
-        const joystickBase = document.getElementById('joystickBase');
-        const joystickStick = document.getElementById('joystickStick');
-        const joystickZone = document.getElementById('joystick-zone');
+        document.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+        document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
         
-        // 检测是否为触摸设备
-        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        // 优化的触摸控制
+        const joystickZone = document.getElementById('joystick-zone');
+        const joystickStick = document.getElementById('joystickStick');
+        const touchIndicator = document.getElementById('touch-indicator');
+        const isTouchDevice = 'ontouchstart' in window;
         
         if (isTouchDevice) {
             joystickZone.style.display = 'block';
             
-            // 触摸开始
-            joystickZone.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const touch = e.touches[0];
+            // 获取摇杆中心位置
+            function getJoystickCenter() {
                 const rect = joystickZone.getBoundingClientRect();
-                joystick.active = true;
-                joystick.startX = rect.left + rect.width / 2;
-                joystick.startY = rect.top + rect.height / 2;
-                updateJoystick(touch.clientX, touch.clientY);
-            }, { passive: false });
+                return {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2
+                };
+            }
             
-            // 触摸移动
-            joystickZone.addEventListener('touchmove', (e) => {
+            // 处理触摸开始
+            function handleTouchStart(e) {
                 e.preventDefault();
-                if (joystick.active) {
-                    const touch = e.touches[0];
+                const touch = e.changedTouches[0];
+                const jCenter = getJoystickCenter();
+                const distToJoystick = Math.hypot(touch.clientX - jCenter.x, touch.clientY - jCenter.y);
+                
+                // 如果触摸在摇杆区域，激活摇杆
+                if (distToJoystick < 100) {
+                    Input.joystick.active = true;
+                    Input.joystick.originX = jCenter.x;
+                    Input.joystick.originY = jCenter.y;
                     updateJoystick(touch.clientX, touch.clientY);
+                    joystickStick.classList.add('active');
+                } else {
+                    // 否则使用全屏跟随模式
+                    Input.touchId = touch.identifier;
+                    Input.active = true;
+                    updateTouchFollow(touch.clientX, touch.clientY);
                 }
-            }, { passive: false });
+            }
             
-            // 触摸结束
-            const endJoystick = (e) => {
+            // 处理触摸移动
+            function handleTouchMove(e) {
                 e.preventDefault();
-                joystick.active = false;
-                joystick.dx = 0;
-                joystick.dy = 0;
-                joystickStick.style.transform = `translate(-50%, -50%)`;
-            };
-            
-            joystickZone.addEventListener('touchend', endJoystick);
-            joystickZone.addEventListener('touchcancel', endJoystick);
-        }
-        
-        function updateJoystick(clientX, clientY) {
-            const maxDist = 50;
-            let dx = clientX - joystick.startX;
-            let dy = clientY - joystick.startY;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            
-            if (dist > maxDist) {
-                dx = (dx / dist) * maxDist;
-                dy = (dy / dist) * maxDist;
-            }
-            
-            joystickStick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-            
-            // 归一化输出
-            if (dist > 10) {
-                joystick.dx = dx / maxDist;
-                joystick.dy = dy / maxDist;
-            } else {
-                joystick.dx = 0;
-                joystick.dy = 0;
-            }
-        }
-        
-        // 全屏触摸移动（右侧区域）
-        let touchMove = { active: false, x: 0, y: 0 };
-        
-        canvas.addEventListener('touchstart', (e) => {
-            if (!gameRunning) return;
-            const touch = e.touches[0];
-            // 如果触摸在右侧区域，作为移动控制
-            if (touch.clientX > window.innerWidth / 2) {
-                touchMove.active = true;
-                touchMove.x = touch.clientX;
-                touchMove.y = touch.clientY;
-            }
-        }, { passive: false });
-        
-        canvas.addEventListener('touchmove', (e) => {
-            if (!gameRunning) return;
-            e.preventDefault();
-            if (touchMove.active && e.touches.length > 0) {
-                const touch = e.touches[0];
-                const dx = touch.clientX - touchMove.x;
-                const dy = touch.clientY - touchMove.y;
                 
-                // 直接控制移动方向
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist > 20) {
-                    joystick.dx = dx / dist;
-                    joystick.dy = dy / dist;
-                    joystick.active = true;
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    
+                    if (Input.joystick.active) {
+                        updateJoystick(touch.clientX, touch.clientY);
+                    } else if (touch.identifier === Input.touchId && Input.active) {
+                        updateTouchFollow(touch.clientX, touch.clientY);
+                    }
+                }
+            }
+            
+            // 处理触摸结束
+            function handleTouchEnd(e) {
+                e.preventDefault();
+                
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    
+                    if (Input.joystick.active && !e.touches.length) {
+                        Input.joystick.active = false;
+                        joystickStick.style.transform = `translate(-50%, -50%)`;
+                        joystickStick.classList.remove('active');
+                        Input.dx = 0;
+                        Input.dy = 0;
+                    } else if (touch.identifier === Input.touchId) {
+                        Input.active = false;
+                        Input.touchId = null;
+                        touchIndicator.classList.remove('active');
+                        // 保留惯性，不立即清零
+                    }
+                }
+            }
+            
+            function updateJoystick(clientX, clientY) {
+                const maxDist = 60; // 增加最大距离
+                let dx = clientX - Input.joystick.originX;
+                let dy = clientY - Input.joystick.originY;
+                const dist = Math.hypot(dx, dy);
+                
+                // 死区处理
+                if (dist < 10) {
+                    Input.dx = 0;
+                    Input.dy = 0;
+                    joystickStick.style.transform = `translate(-50%, -50%)`;
+                    return;
                 }
                 
-                touchMove.x = touch.clientX;
-                touchMove.y = touch.clientY;
+                // 限制最大距离
+                if (dist > maxDist) {
+                    dx = (dx / dist) * maxDist;
+                    dy = (dy / dist) * maxDist;
+                }
+                
+                // 更新摇杆位置
+                joystickStick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+                
+                // 归一化输出（带死区）
+                const normalizedDist = Math.min(dist, maxDist);
+                const intensity = (normalizedDist - 10) / (maxDist - 10);
+                Input.dx = (dx / dist) * intensity;
+                Input.dy = (dy / dist) * intensity;
             }
-        }, { passive: false });
+            
+            function updateTouchFollow(x, y) {
+                // 全屏跟随：计算相对于玩家的方向
+                const dx = x - player.x;
+                const dy = y - player.y;
+                const dist = Math.hypot(dx, dy);
+                
+                if (dist > 20) {
+                    Input.dx = dx / dist;
+                    Input.dy = dy / dist;
+                    
+                    // 显示触摸指示器
+                    touchIndicator.style.left = x + 'px';
+                    touchIndicator.style.top = y + 'px';
+                    touchIndicator.classList.add('active');
+                }
+            }
+            
+            // 绑定事件
+            document.addEventListener('touchstart', handleTouchStart, { passive: false });
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+            document.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+        }
         
-        canvas.addEventListener('touchend', () => {
-            touchMove.active = false;
-            if (!joystick.active) {
-                joystick.dx = 0;
-                joystick.dy = 0;
-            }
-        });
+        function lightenColor(color, percent) {
+            const num = parseInt(color.replace("#",""),16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+            const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+            const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+            return "#" + (0x1000000 + R*0x10000 + G*0x100 + B).toString(16).slice(1);
+        }
         
         function updatePlayer() {
             let dx = 0, dy = 0;
@@ -726,64 +928,77 @@
             if (keys['a'] || keys['arrowleft']) dx = -1;
             if (keys['d'] || keys['arrowright']) dx = 1;
             
-            // 摇杆输入（覆盖键盘）
-            if (joystick.active || (joystick.dx !== 0 || joystick.dy !== 0)) {
-                dx = joystick.dx;
-                dy = joystick.dy;
+            // 触摸输入优先
+            if (Input.joystick.active || Input.active) {
+                dx = Input.dx;
+                dy = Input.dy;
             }
             
-            // 归一化
+            // 应用加速度
             if (dx !== 0 || dy !== 0) {
-                const len = Math.sqrt(dx * dx + dy * dy);
-                if (len > 1) {
-                    dx /= len;
-                    dy /= len;
-                }
+                player.vx += dx * player.acceleration;
+                player.vy += dy * player.acceleration;
             }
             
-            player.x += dx * player.speed;
-            player.y += dy * player.speed;
+            // 应用摩擦力
+            player.vx *= player.friction;
+            player.vy *= player.friction;
             
-            // 边界限制
-            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
-            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+            // 限制最大速度
+            const speed = Math.hypot(player.vx, player.vy);
+            if (speed > player.maxSpeed) {
+                player.vx = (player.vx / speed) * player.maxSpeed;
+                player.vy = (player.vy / speed) * player.maxSpeed;
+            }
             
-            // 无敌时间递减（更短的无敌时间增加难度）
+            // 应用速度
+            player.x += player.vx;
+            player.y += player.vy;
+            
+            // 边界限制（带反弹）
+            if (player.x < player.radius) {
+                player.x = player.radius;
+                player.vx *= -0.5;
+            }
+            if (player.x > canvas.width - player.radius) {
+                player.x = canvas.width - player.radius;
+                player.vx *= -0.5;
+            }
+            if (player.y < player.radius) {
+                player.y = player.radius;
+                player.vy *= -0.5;
+            }
+            if (player.y > canvas.height - player.radius) {
+                player.y = canvas.height - player.radius;
+                player.vy *= -0.5;
+            }
+            
             if (player.invincible > 0) player.invincible--;
+            player.animFrame += 0.12;
+            player.capeWave += 0.2;
+            player.glowIntensity = 0.6 + Math.sin(player.animFrame) * 0.4;
             
-            // 生命恢复（很慢）
-            player.regenTimer++;
-            if (player.regenTimer > 180 && player.health < player.maxHealth) {
-                player.health += 0.5;
-                player.regenTimer = 0;
-            }
-            
-            // 更新武器
             player.weapons.forEach(w => w.update());
         }
         
         function checkCollisions() {
-            // 武器与敌人碰撞
             player.weapons.forEach(weapon => {
                 const wpos = weapon.getPosition();
                 enemies.forEach((enemy, index) => {
                     const dist = Math.hypot(wpos.x - enemy.x, wpos.y - enemy.y);
                     if (dist < enemy.radius + weapon.size) {
-                        // 暴击判定
-                        const isCrit = Math.random() < 0.15;
-                        const damage = Math.floor(weapon.damage * (isCrit ? 2 : 1));
+                        const isCrit = Math.random() < 0.25;
+                        const damage = Math.floor(weapon.damage * (isCrit ? 2.2 : 1) * (0.9 + Math.random() * 0.2));
                         
                         enemy.health -= damage;
-                        damageTexts.push(new DamageText(enemy.x, enemy.y - 10, damage, isCrit));
+                        damageTexts.push(new DamageText(enemy.x, enemy.y - 25, damage, isCrit));
                         
-                        // 击退
                         const angle = Math.atan2(enemy.y - player.y, enemy.x - player.x);
-                        const knockback = enemy.type === 'BOSS' ? 3 : 8;
+                        const knockback = enemy.isElite ? 3 : 8;
                         enemy.x += Math.cos(angle) * knockback;
                         enemy.y += Math.sin(angle) * knockback;
                         
-                        // 粒子
-                        for (let i = 0; i < (isCrit ? 5 : 2); i++) {
+                        for (let i = 0; i < (isCrit ? 8 : 4); i++) {
                             particles.push(new Particle(enemy.x, enemy.y, enemy.color));
                         }
                         
@@ -794,80 +1009,86 @@
                 });
             });
             
-            // 玩家与敌人碰撞 - 更严格的碰撞检测
             enemies.forEach(enemy => {
                 const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
-                // 碰撞判定稍微宽松一点但伤害更高
-                if (dist < player.radius + enemy.radius * 0.8) {
+                if (dist < player.radius + enemy.radius * 0.75) {
                     if (player.invincible === 0) {
-                        // 计算伤害（精英怪和Boss伤害更高）
                         let damage = enemy.damage;
-                        if (enemy.isElite) damage *= 1.5;
-                        if (enemy.type === 'BOSS') damage *= 2;
-                        
                         player.health -= damage;
-                        player.invincible = 30; // 0.5秒无敌（更短）
-                        
-                        // 屏幕震动
-                        canvas.style.transform = `translate(${(Math.random()-0.5)*20}px, ${(Math.random()-0.5)*20}px)`;
-                        setTimeout(() => canvas.style.transform = '', 100);
-                        
-                        // 受伤粒子
-                        for (let i = 0; i < 8; i++) {
-                            particles.push(new Particle(player.x, player.y, '#ff0000', 2));
-                        }
+                        player.invincible = 35;
                         
                         // 击退玩家
                         const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-                        player.x += Math.cos(angle) * 30;
-                        player.y += Math.sin(angle) * 30;
+                        player.vx += Math.cos(angle) * 15;
+                        player.vy += Math.sin(angle) * 15;
                         
-                        if (player.health <= 0) {
-                            endGame();
+                        canvas.style.transform = `translate(${(Math.random()-0.5)*12}px, ${(Math.random()-0.5)*12}px)`;
+                        setTimeout(() => canvas.style.transform = '', 60);
+                        
+                        for (let i = 0; i < 12; i++) {
+                            particles.push(new Particle(player.x, player.y, '#ff6b6b', 2));
                         }
+                        
+                        if (player.health <= 0) endGame();
                     }
                 }
             });
             
-            // 收集经验球
-            expOrbs.forEach((orb, index) => {
-                const dist = Math.hypot(player.x - orb.x, player.y - orb.y);
-                if (dist < player.radius + orb.radius + 15) {
+            expOrbs.forEach((orb, i) => {
+                if (Math.hypot(player.x - orb.x, player.y - orb.y) < player.radius + orb.radius + 20) {
                     score += orb.value * 5;
                     exp += orb.value;
-                    expOrbs.splice(index, 1);
-                    
-                    for (let i = 0; i < 4; i++) {
-                        particles.push(new Particle(orb.x, orb.y, '#00d2ff'));
-                    }
-                    
+                    expOrbs.splice(i, 1);
+                    for (let j = 0; j < 5; j++) particles.push(new Particle(orb.x, orb.y, '#ff8c42'));
                     checkLevelUp();
                 }
             });
+            
+            healItems.forEach((item, i) => {
+                if (Math.hypot(player.x - item.x, player.y - item.y) < player.radius + item.radius + 15) {
+                    const healAmount = Math.min(item.amount, player.maxHealth - player.health);
+                    player.health = Math.min(player.health + item.amount, player.maxHealth);
+                    healItems.splice(i, 1);
+                    showHealNotification(player.x, player.y - 50, healAmount);
+                    for (let j = 0; j < 15; j++) {
+                        particles.push(new Particle(player.x, player.y, '#00ff88', 1.8));
+                    }
+                }
+            });
+        }
+        
+        function showHealNotification(x, y, amount) {
+            const div = document.createElement('div');
+            div.className = 'heal-notify';
+            div.textContent = `+${amount} ❤️`;
+            div.style.left = x + 'px';
+            div.style.top = y + 'px';
+            document.getElementById('gameContainer').appendChild(div);
+            setTimeout(() => div.remove(), 1200);
         }
         
         function killEnemy(enemy, index) {
             kills++;
             score += enemy.expValue * 10;
             
-            // 掉落经验球
             expOrbs.push(new ExpOrb(enemy.x, enemy.y, enemy.expValue));
             
-            // Boss额外奖励
-            if (enemy.type === 'BOSS') {
-                for (let i = 0; i < 5; i++) {
-                    expOrbs.push(new ExpOrb(
-                        enemy.x + (Math.random() - 0.5) * 50,
-                        enemy.y + (Math.random() - 0.5) * 50,
-                        enemy.expValue / 2
-                    ));
+            if (enemy.config.rewardChance >= 1.0 || Math.random() < enemy.config.rewardChance) {
+                const healCount = enemy.config.multipleHeal || 1;
+                for (let i = 0; i < healCount; i++) {
+                    setTimeout(() => {
+                        healItems.push(new HealItem(
+                            enemy.x + (Math.random() - 0.5) * 50,
+                            enemy.y + (Math.random() - 0.5) * 50,
+                            enemy.type === 'BOSS' ? 60 : enemy.isElite ? 45 : 30
+                        ));
+                    }, i * 150);
                 }
             }
             
-            // 死亡爆炸
-            const particleCount = enemy.type === 'BOSS' ? 30 : enemy.type === 'ELITE' ? 15 : 8;
+            const particleCount = enemy.type === 'BOSS' ? 60 : enemy.isElite ? 30 : 15;
             for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle(enemy.x, enemy.y, enemy.color, 2));
+                particles.push(new Particle(enemy.x, enemy.y, enemy.color, 3));
             }
             
             enemies.splice(index, 1);
@@ -877,225 +1098,267 @@
             if (exp >= expToNext) {
                 level++;
                 exp -= expToNext;
-                expToNext = Math.floor(expToNext * 1.3);
+                expToNext = Math.floor(expToNext * 1.2);
                 
-                // 升级奖励递减
-                player.maxHealth += 15;
-                player.health = Math.min(player.health + 20, player.maxHealth);
-                player.speed += 0.1;
+                player.maxHealth += 25;
+                player.health += 35;
+                player.maxSpeed += 0.2;
+                player.acceleration += 0.05;
                 
                 initWeapons();
                 
-                // 升级特效
-                for (let i = 0; i < 30; i++) {
-                    const angle = (Math.PI * 2 / 30) * i;
+                for (let i = 0; i < 50; i++) {
+                    const angle = (Math.PI * 2 / 50) * i;
                     particles.push(new Particle(
-                        player.x + Math.cos(angle) * 40,
-                        player.y + Math.sin(angle) * 40,
-                        '#ffd700',
-                        1.5
+                        player.x + Math.cos(angle) * 60,
+                        player.y + Math.sin(angle) * 60,
+                        '#ff8c42',
+                        2.5
                     ));
                 }
             }
         }
         
-        let lastSpawnTime = 0;
+        let lastSpawn = 0;
         let eliteTimer = 0;
         
         function spawnEnemy() {
             const now = Date.now();
-            const spawnInterval = Math.max(500, 2000 - (gameTime / 1000) * 50 - level * 100);
+            const interval = Math.max(350, 1200 - gameTime / 1200 - level * 60);
             
-            if (now - lastSpawnTime > spawnInterval) {
-                lastSpawnTime = now;
+            if (now - lastSpawn > interval) {
+                lastSpawn = now;
                 
-                // 根据时间和等级选择敌人类型
                 let type = 'NORMAL';
                 const rand = Math.random();
-                const timeMinutes = gameTime / 60000;
+                const minutes = gameTime / 60000;
                 
-                if (timeMinutes > 2 && rand < 0.2) type = 'FAST';
-                if (timeMinutes > 3 && rand < 0.15) type = 'TANK';
-                if (timeMinutes > 4 && rand < 0.1) type = 'ELITE';
+                if (minutes > 1 && rand < 0.3) type = 'FAST';
+                if (minutes > 2 && rand < 0.2) type = 'TANK';
+                if (minutes > 3 && rand < 0.15) type = 'ELITE';
                 
-                // 精英怪波次
                 eliteTimer++;
-                let isElite = false;
-                if (eliteTimer > 20 + Math.random() * 10) {
-                    isElite = true;
+                if (eliteTimer > 12 + Math.random() * 8) {
+                    type = 'ELITE';
                     eliteTimer = 0;
-                    showEliteWarning();
+                    showWarning('🔥 精英怪来袭！');
                 }
                 
-                // Boss生成（每2分钟）
-                if (Math.floor(gameTime / 60000) > waveNumber) {
-                    waveNumber++;
-                    enemies.push(new Enemy('BOSS'));
-                    showEliteWarning();
-                } else {
-                    enemies.push(new Enemy(type, isElite));
+                if (Math.floor(gameTime / 80000) > Math.floor((gameTime - 20) / 80000)) {
+                    type = 'BOSS';
+                    showWarning('☠️ BOSS降临！');
                 }
                 
-                // 随着时间增加敌人数量
-                const extraSpawns = Math.floor(gameTime / 30000);
-                for (let i = 0; i < extraSpawns && i < 3; i++) {
-                    if (Math.random() < 0.5) {
-                        enemies.push(new Enemy('NORMAL', Math.random() < 0.1));
-                    }
+                enemies.push(new Enemy(type));
+                
+                const extras = Math.min(4, Math.floor(gameTime / 15000));
+                for (let i = 0; i < extras && Math.random() < 0.7; i++) {
+                    enemies.push(new Enemy('NORMAL', Math.random() < 0.25));
                 }
             }
             
-            // 难度递增
-            difficultyMultiplier = 1 + (gameTime / 60000) * 0.5;
-            document.getElementById('diffLevel').textContent = Math.floor(difficultyMultiplier * 10) / 10;
+            difficultyMultiplier = 1 + gameTime / 50000;
+            document.getElementById('diffLevel').textContent = difficultyMultiplier.toFixed(1);
         }
         
-        function showEliteWarning() {
+        function showWarning(text) {
             const warning = document.getElementById('eliteWarning');
+            warning.textContent = text;
             warning.style.opacity = '1';
-            warning.style.transform = 'translate(-50%, -50%) scale(1.2)';
+            warning.style.transform = 'translate(-50%, -50%) scale(1.4)';
             setTimeout(() => {
                 warning.style.opacity = '0';
                 warning.style.transform = 'translate(-50%, -50%) scale(1)';
-            }, 1500);
+            }, 2500);
         }
         
+        // 绘制橙色主题玩家
         function drawPlayer() {
-            // 武器轨迹
-            player.weapons.forEach(weapon => {
-                weapon.trail.forEach((t, i) => {
-                    if (t.alpha > 0) {
-                        ctx.strokeStyle = `rgba(255, 215, 0, ${t.alpha * 0.6})`;
-                        ctx.lineWidth = 4;
-                        ctx.lineCap = 'round';
-                        ctx.beginPath();
-                        ctx.moveTo(
-                            player.x + Math.cos(weapon.angle - 0.3) * weapon.distance,
-                            player.y + Math.sin(weapon.angle - 0.3) * weapon.distance
-                        );
-                        ctx.lineTo(t.x, t.y);
-                        ctx.stroke();
-                    }
-                });
-            });
+            ctx.save();
+            ctx.translate(player.x, player.y);
             
-            // 武器
+            if (player.invincible > 0 && Math.floor(player.invincible / 3) % 2 === 0) {
+                ctx.globalAlpha = 0.4;
+            }
+            
+            // 橙色光环
+            const glowRadius = player.radius + 20 + Math.sin(player.animFrame) * 5;
+            const gradient = ctx.createRadialGradient(0, 0, player.radius, 0, 0, glowRadius);
+            gradient.addColorStop(0, `rgba(255, 140, 66, ${player.glowIntensity})`);
+            gradient.addColorStop(0.5, `rgba(255, 107, 53, ${player.glowIntensity * 0.5})`);
+            gradient.addColorStop(1, 'rgba(255, 140, 66, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 动态披风（橙色）
+            ctx.fillStyle = '#d35400';
+            ctx.beginPath();
+            ctx.moveTo(-player.radius * 0.7, 8);
+            for (let i = 0; i <= 12; i++) {
+                const angle = (i / 12) * Math.PI + Math.PI;
+                const wave = Math.sin(player.capeWave + i * 0.4) * 8;
+                const r = player.radius * 1.3 + wave;
+                ctx.lineTo(Math.cos(angle) * r * 0.7, Math.sin(angle) * r * 0.5 + 15);
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            // 身体（橙色渐变）
+            const bodyGrad = ctx.createRadialGradient(-8, -8, 0, 0, 0, player.radius);
+            bodyGrad.addColorStop(0, '#ffa94d');
+            bodyGrad.addColorStop(0.6, '#ff8c42');
+            bodyGrad.addColorStop(1, '#e67e22');
+            ctx.fillStyle = bodyGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 盔甲纹理
+            ctx.strokeStyle = '#ffd93d';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, player.radius - 6, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 胸甲（橙色主题）
+            ctx.fillStyle = 'rgba(255, 140, 66, 0.4)';
+            ctx.beginPath();
+            ctx.moveTo(0, -player.radius * 0.6);
+            ctx.lineTo(player.radius * 0.6, 0);
+            ctx.lineTo(0, player.radius * 0.6);
+            ctx.lineTo(-player.radius * 0.6, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 眼睛（更明亮）
+            const eyeGlow = ctx.createRadialGradient(-7, -5, 0, -7, -5, 7);
+            eyeGlow.addColorStop(0, '#ffffff');
+            eyeGlow.addColorStop(0.5, '#ffd93d');
+            eyeGlow.addColorStop(1, '#ff8c42');
+            ctx.fillStyle = eyeGlow;
+            ctx.beginPath();
+            ctx.arc(-7, -5, 6, 0, Math.PI * 2);
+            ctx.arc(7, -5, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#2c3e50';
+            ctx.beginPath();
+            ctx.arc(-7, -5, 3, 0, Math.PI * 2);
+            ctx.arc(7, -5, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眉毛（英气）
+            ctx.strokeStyle = '#d35400';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(-12, -12);
+            ctx.lineTo(-2, -9);
+            ctx.moveTo(2, -9);
+            ctx.lineTo(12, -12);
+            ctx.stroke();
+            
+            ctx.restore();
+            
+            // 绘制武器（更帅的刀）
             player.weapons.forEach(weapon => {
                 const pos = weapon.getPosition();
                 
+                weapon.trail.forEach((t, i) => {
+                    if (t.alpha > 0) {
+                        ctx.save();
+                        ctx.globalAlpha = t.alpha * 0.7;
+                        ctx.fillStyle = `hsl(${25 + i * 2}, 100%, 60%)`;
+                        ctx.translate(t.x, t.y);
+                        ctx.rotate(t.angle + Math.PI/4);
+                        ctx.fillRect(-weapon.size * 0.3, -weapon.size * 0.8, weapon.size * 0.6, weapon.size * 1.6);
+                        ctx.restore();
+                    }
+                });
+                
+                weapon.particles.forEach(p => {
+                    ctx.save();
+                    ctx.globalAlpha = p.life / 25;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+                
                 ctx.save();
                 ctx.translate(pos.x, pos.y);
-                ctx.rotate(weapon.angle);
+                ctx.rotate(weapon.angle + weapon.rotation);
                 
-                // 光晕
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = '#ffd700';
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = '#ff6b35';
                 
-                // 刀刃
-                ctx.fillStyle = 'linear-gradient(90deg, #c0c0c0, #ffffff, #c0c0c0)';
-                ctx.fillStyle = '#e0e0e0';
+                // 刀刃（武士刀风格）
+                const bladeGrad = ctx.createLinearGradient(0, -weapon.size, 0, weapon.size);
+                bladeGrad.addColorStop(0, '#fff5e6');
+                bladeGrad.addColorStop(0.3, '#ffd93d');
+                bladeGrad.addColorStop(0.7, '#ff8c42');
+                bladeGrad.addColorStop(1, '#e74c3c');
+                
+                ctx.fillStyle = bladeGrad;
                 ctx.beginPath();
                 ctx.moveTo(0, -weapon.size);
-                ctx.lineTo(weapon.size/2, 0);
-                ctx.lineTo(0, weapon.size);
-                ctx.lineTo(-weapon.size/2, 0);
-                ctx.closePath();
+                ctx.quadraticCurveTo(weapon.size * 0.5, 0, 0, weapon.size);
+                ctx.quadraticCurveTo(-weapon.size * 0.5, 0, 0, -weapon.size);
                 ctx.fill();
                 
-                // 刀锋高光
-                ctx.fillStyle = '#ffffff';
+                // 刀纹
+                ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+                ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(0, -weapon.size * 0.8);
-                ctx.lineTo(weapon.size * 0.2, 0);
-                ctx.lineTo(0, weapon.size * 0.8);
-                ctx.lineTo(-weapon.size * 0.2, 0);
-                ctx.closePath();
+                ctx.moveTo(0, -weapon.size * 0.7);
+                ctx.lineTo(0, weapon.size * 0.5);
+                ctx.stroke();
+                
+                // 刀柄
+                ctx.fillStyle = '#2c3e50';
+                ctx.fillRect(-4, -10, 8, 20);
+                
+                // 护手（金色）
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 12, 4, 0, 0, Math.PI * 2);
                 ctx.fill();
                 
                 ctx.restore();
             });
             
-            // 玩家
-            ctx.save();
-            ctx.translate(player.x, player.y);
-            
-            // 无敌闪烁
-            if (player.invincible > 0 && Math.floor(player.invincible / 3) % 2 === 0) {
-                ctx.globalAlpha = 0.3;
-            }
-            
-            // 外圈光环
-            ctx.strokeStyle = `rgba(52, 152, 219, ${0.5 + Math.sin(gameTime / 200) * 0.3})`;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(0, 0, player.radius + 5, 0, Math.PI * 2);
-            ctx.stroke();
-            
-            // 身体
-            const gradient = ctx.createRadialGradient(-5, -5, 0, 0, 0, player.radius);
-            gradient.addColorStop(0, '#5dade2');
-            gradient.addColorStop(1, '#2874a6');
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 衣服细节
-            ctx.fillStyle = '#1a5276';
-            ctx.beginPath();
-            ctx.arc(0, 0, player.radius * 0.6, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 眼睛
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.arc(-6, -4, 5, 0, Math.PI * 2);
-            ctx.arc(6, -4, 5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = '#00d2ff';
-            ctx.beginPath();
-            ctx.arc(-6, -4, 2.5, 0, Math.PI * 2);
-            ctx.arc(6, -4, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.restore();
-            
             // 血条
-            const barWidth = 60;
-            const barHeight = 8;
-            const barY = player.y - 40;
-            
+            const barW = 80, barH = 12, barY = player.y - 55;
             ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            ctx.fillRect(player.x - barWidth/2 - 2, barY - 2, barWidth + 4, barHeight + 4);
+            ctx.fillRect(player.x - barW/2 - 2, barY - 2, barW + 4, barH + 4);
             
-            const healthPercent = player.health / player.maxHealth;
-            ctx.fillStyle = healthPercent > 0.6 ? '#2ecc71' : healthPercent > 0.3 ? '#f1c40f' : '#e74c3c';
-            ctx.fillRect(player.x - barWidth/2, barY, barWidth * healthPercent, barHeight);
+            const hpPct = player.health / player.maxHealth;
+            const hpColor = hpPct > 0.6 ? '#00ff88' : hpPct > 0.3 ? '#ffd700' : '#ff0040';
+            ctx.fillStyle = hpColor;
+            ctx.fillRect(player.x - barW/2, barY, barW * hpPct, barH);
             
-            // 血条边框
-            ctx.strokeStyle = 'white';
+            ctx.strokeStyle = '#fff';
             ctx.lineWidth = 2;
-            ctx.strokeRect(player.x - barWidth/2, barY, barWidth, barHeight);
+            ctx.strokeRect(player.x - barW/2, barY, barW, barH);
         }
         
         function drawBackground() {
-            // 动态背景
-            const gradient = ctx.createRadialGradient(
+            const grad = ctx.createRadialGradient(
                 canvas.width/2, canvas.height/2, 0,
                 canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height)
             );
-            gradient.addColorStop(0, '#1a1a2e');
-            gradient.addColorStop(0.5, '#16213e');
-            gradient.addColorStop(1, '#0f0f23');
-            ctx.fillStyle = gradient;
+            grad.addColorStop(0, '#2a1a1a');
+            grad.addColorStop(0.5, '#1a1510');
+            grad.addColorStop(1, '#0a0806');
+            ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 动态网格
-            ctx.strokeStyle = `rgba(255,255,255,${0.03 + Math.sin(gameTime / 1000) * 0.02})`;
+            ctx.strokeStyle = `rgba(255, 140, 66, ${0.08 + Math.sin(gameTime / 1200) * 0.04})`;
             ctx.lineWidth = 1;
-            const gridSize = 50;
-            const offset = (gameTime / 50) % gridSize;
+            const gridSize = 70;
+            const offset = (gameTime / 100) % gridSize;
             
             for (let i = 0; i < canvas.width; i += gridSize) {
                 ctx.beginPath();
@@ -1103,16 +1366,16 @@
                 ctx.lineTo(i, canvas.height);
                 ctx.stroke();
             }
-            for (let i = 0; i < canvas.height; i += gridSize) {
+            for (let i = offset; i < canvas.height; i += gridSize) {
                 ctx.beginPath();
-                ctx.moveTo(0, i + offset);
-                ctx.lineTo(canvas.width, i + offset);
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
                 ctx.stroke();
             }
         }
         
         function updateUI() {
-            document.getElementById('health').textContent = Math.max(0, Math.floor(player.health));
+            document.getElementById('health').textContent = Math.floor(player.health);
             document.getElementById('maxHealth').textContent = Math.floor(player.maxHealth);
             document.getElementById('score').textContent = score;
             document.getElementById('level').textContent = level;
@@ -1123,76 +1386,58 @@
         function gameLoop(timestamp) {
             if (!gameRunning) return;
             
-            const deltaTime = timestamp - lastTime;
+            const dt = timestamp - lastTime;
             lastTime = timestamp;
-            gameTime += deltaTime;
+            gameTime += dt;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             drawBackground();
             
-            // 更新和绘制经验球
-            expOrbs = expOrbs.filter(orb => orb.life > 0);
-            expOrbs.forEach(orb => {
-                orb.update();
-                orb.draw();
-            });
+            healItems = healItems.filter(h => h.life > 0);
+            healItems.forEach(h => { h.update(); h.draw(); });
             
-            // 生成敌人
+            expOrbs = expOrbs.filter(e => e.life > 0);
+            expOrbs.forEach(e => { e.update(); e.draw(); });
+            
             spawnEnemy();
             
-            // 更新和绘制敌人
-            enemies.forEach(enemy => {
-                enemy.update();
-                enemy.draw();
-            });
+            enemies.forEach(e => { e.update(); e.draw(); });
             
-            // 更新玩家
             updatePlayer();
             drawPlayer();
             
-            // 碰撞检测
             checkCollisions();
             
-            // 伤害数字
-            damageTexts = damageTexts.filter(dt => dt.life > 0);
-            damageTexts.forEach(dt => {
-                dt.update();
-                dt.draw();
-            });
+            damageTexts = damageTexts.filter(d => d.life > 0);
+            damageTexts.forEach(d => { d.update(); d.draw(); });
             
-            // 粒子
             particles = particles.filter(p => p.life > 0);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
+            particles.forEach(p => { p.update(); p.draw(); });
             
-            // 经验条
-            const expBarWidth = Math.min(400, canvas.width - 40);
-            const expPercent = exp / expToNext;
-            const barX = (canvas.width - expBarWidth) / 2;
+            // 经验条（橙色主题）
+            const expW = Math.min(450, canvas.width - 40);
+            const expX = (canvas.width - expW) / 2;
+            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillRect(expX, 10, expW, 32);
             
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.fillRect(barX, 15, expBarWidth, 25);
+            const expGrad = ctx.createLinearGradient(expX, 0, expX + expW, 0);
+            expGrad.addColorStop(0, '#ff6b35');
+            expGrad.addColorStop(0.5, '#ff8c42');
+            expGrad.addColorStop(1, '#ffa94d');
+            ctx.fillStyle = expGrad;
+            ctx.fillRect(expX, 10, expW * (exp / expToNext), 32);
             
-            const expGradient = ctx.createLinearGradient(barX, 0, barX + expBarWidth, 0);
-            expGradient.addColorStop(0, '#2980b9');
-            expGradient.addColorStop(1, '#00d2ff');
-            ctx.fillStyle = expGradient;
-            ctx.fillRect(barX, 15, expBarWidth * expPercent, 25);
-            
-            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.8)';
             ctx.lineWidth = 2;
-            ctx.strokeRect(barX, 15, expBarWidth, 25);
+            ctx.strokeRect(expX, 10, expW, 32);
             
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 18px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(`LEVEL ${level}  (${exp}/${expToNext})`, canvas.width/2, 32);
+            ctx.fillText(`LEVEL ${level}  ${exp}/${expToNext}`, canvas.width/2, 33);
             
             updateUI();
-            
             requestAnimationFrame(gameLoop);
         }
         
@@ -1200,11 +1445,8 @@
             document.getElementById('startScreen').style.display = 'none';
             gameRunning = true;
             lastTime = performance.now();
-            
-            // 重置玩家位置到屏幕中心
             player.x = canvas.width / 2;
             player.y = canvas.height / 2;
-            
             initWeapons();
             requestAnimationFrame(gameLoop);
         }
@@ -1219,55 +1461,35 @@
         }
         
         function restartGame() {
-            // 完全重置游戏状态
             player.x = canvas.width / 2;
             player.y = canvas.height / 2;
-            player.health = 80;
-            player.maxHealth = 80;
-            player.speed = 2.5;
+            player.health = 100;
+            player.maxHealth = 100;
+            player.speed = 4;
+            player.maxSpeed = 7;
+            player.vx = 0;
+            player.vy = 0;
             player.invincible = 0;
-            player.regenTimer = 0;
             
-            score = 0;
-            kills = 0;
-            level = 1;
-            exp = 0;
-            expToNext = 80;
-            gameTime = 0;
-            difficultyMultiplier = 1;
-            waveNumber = 1;
-            eliteTimer = 0;
+            score = 0; kills = 0; level = 1; exp = 0; expToNext = 100;
+            gameTime = 0; difficultyMultiplier = 1; eliteTimer = 0;
             
-            enemies = [];
-            expOrbs = [];
-            damageTexts = [];
-            particles = [];
+            enemies = []; expOrbs = []; healItems = []; damageTexts = []; particles = [];
             
-            joystick.dx = 0;
-            joystick.dy = 0;
-            joystick.active = false;
+            Input.reset();
             
             initWeapons();
-            
             document.getElementById('gameOver').style.display = 'none';
             gameRunning = true;
             lastTime = performance.now();
             requestAnimationFrame(gameLoop);
         }
         
-        // 防止默认触摸行为
-        document.addEventListener('touchmove', (e) => {
-            if (e.target === canvas || e.target === joystickZone) {
+        document.addEventListener('touchmove', e => {
+            if (e.target === canvas || e.target.closest('#joystick-zone')) {
                 e.preventDefault();
             }
         }, { passive: false });
-        
-        // 防止空格键滚动
-        window.addEventListener('keydown', (e) => {
-            if (e.key === ' ' && e.target === document.body) {
-                e.preventDefault();
-            }
-        });
     </script>
 </body>
 </html>
