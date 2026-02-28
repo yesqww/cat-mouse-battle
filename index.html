@@ -19,7 +19,6 @@
             overflow-x: hidden;
         }
         
-        /* 头部 */
         header {
             text-align: center;
             padding: 60px 20px 40px;
@@ -61,7 +60,6 @@
             margin-top: 10px;
         }
         
-        /* 游戏网格 */
         .games-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -71,7 +69,6 @@
             gap: 30px;
         }
         
-        /* 游戏卡片 */
         .game-card {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 20px;
@@ -164,7 +161,6 @@
             box-shadow: 0 6px 20px rgba(78, 205, 196, 0.5);
         }
         
-        /* 页脚 */
         footer {
             text-align: center;
             padding: 40px 20px;
@@ -173,7 +169,6 @@
             margin-top: 60px;
         }
         
-        /* 响应式 */
         @media (max-width: 768px) {
             h1 { font-size: 2rem; }
             .games-container {
@@ -207,7 +202,24 @@
             </div>
         </div>
         
-        <!-- 太空射击 -->
+        <!-- 太空射击 双人地狱版 -->
+        <div class="game-card" onclick="window.location.href='./games/space-shooter-duo/'">
+            <div class="game-preview" style="background: linear-gradient(135deg, #2d1b1b 0%, #1a0f0f 100%);">
+                <span class="game-icon">🔥👥</span>
+            </div>
+            <div class="game-info">
+                <h2 class="game-title">太空射击 双人地狱版</h2>
+                <p class="game-desc">⚡ 极限难度！双人键盘合作，自动开火，共抗外星大军！敌人更多更快更耐打，共享3条生命。WASD+方向键操作。</p>
+                <div class="game-meta">
+                    <span class="tag" style="background: rgba(255,107,107,0.3); color: #ff6b6b;">地狱难度</span>
+                    <span class="tag">键盘双人</span>
+                    <span class="tag">合作</span>
+                </div>
+                <a href="./games/space-shooter-duo/" class="play-btn">开始挑战 →</a>
+            </div>
+        </div>
+        
+        <!-- 太空射击 单人版 -->
         <div class="game-card" onclick="window.location.href='./games/space-shooter/'">
             <div class="game-preview" style="background: linear-gradient(135deg, #1a1a3e 0%, #0f0f2e 100%);">
                 <span class="game-icon">🚀👾</span>
@@ -224,7 +236,7 @@
             </div>
         </div>
         
-        <!-- 占位：更多游戏 -->
+        <!-- 敬请期待 -->
         <div class="game-card" style="opacity: 0.5;">
             <div class="game-preview" style="background: linear-gradient(135deg, #1a1f3a 0%, #0f1419 100%);">
                 <span class="game-icon" style="filter: grayscale(100%);">🎲</span>
