@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>猫鼠大战 - 双人游戏</title>
+    <title>游戏中心 - Game Center</title>
     <style>
         * {
             margin: 0;
@@ -12,673 +12,219 @@
         }
         
         body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             font-family: 'Microsoft YaHei', sans-serif;
-            overflow: hidden;
             color: white;
+            overflow-x: hidden;
         }
         
-        .title {
-            font-size: 2rem;
+        /* 头部 */
+        header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            position: relative;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(78, 205, 196, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 3rem;
             margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(255, 200, 100, 0.8);
-            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            background: linear-gradient(45deg, #4ecdc4, #ff6b6b, #feca57);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            text-shadow: 0 0 30px rgba(78, 205, 196, 0.3);
+            animation: gradient 3s ease infinite;
+            background-size: 200% 200%;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
         .subtitle {
             color: #888;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-        }
-        
-        #gameCanvas {
-            border: 3px solid #4ecdc4;
-            box-shadow: 0 0 30px rgba(78, 205, 196, 0.3);
-            background: #e6f5ff;
-            cursor: none;
-            max-width: 95vw;
-        }
-        
-        .controls {
-            margin-top: 15px;
-            display: flex;
-            gap: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .control-box {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px 25px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .control-box h3 {
-            margin-bottom: 8px;
-            font-size: 1rem;
-        }
-        
-        .cat-control h3 { color: #ff9f43; }
-        .mouse-control h3 { color: #a29bfe; }
-        
-        .control-box p {
-            color: #ccc;
-            font-size: 0.85rem;
-        }
-        
-        .stats {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 40px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 30px;
-            border-radius: 25px;
             font-size: 1.1rem;
+            margin-top: 10px;
         }
         
-        .stat {
+        /* 游戏网格 */
+        .games-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+        }
+        
+        /* 游戏卡片 */
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(78, 205, 196, 0.2);
+            border-color: rgba(78, 205, 196, 0.5);
+        }
+        
+        .game-preview {
+            height: 200px;
+            background: linear-gradient(135deg, #2d3561 0%, #1a1f3a 100%);
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
+            overflow: hidden;
         }
         
-        .cat-score { color: #ff9f43; }
-        .timer { color: #fff; }
-        .timer.warning { color: #ff6b6b; animation: pulse 1s infinite; }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .modal {
-            position: fixed;
+        .game-preview::before {
+            content: '';
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(78, 205, 196, 0.2) 0%, transparent 50%);
         }
         
-        .modal-content {
-            text-align: center;
-            padding: 40px;
-            border-radius: 20px;
-            border: 2px solid;
+        .game-icon {
+            z-index: 1;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
         }
         
-        .start-modal .modal-content {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            border-color: #4ecdc4;
-            box-shadow: 0 0 50px rgba(78, 205, 196, 0.5);
+        .game-info {
+            padding: 25px;
         }
         
-        .game-over-modal .modal-content {
-            background: linear-gradient(135deg, #2d1b1b, #1a1a2e);
-            border-color: #ff6b6b;
-            box-shadow: 0 0 50px rgba(255, 107, 107, 0.5);
+        .game-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #fff;
         }
         
-        .modal h2 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-        }
-        
-        .start-modal h2 {
-            color: #4ecdc4;
-            text-shadow: 0 0 20px rgba(78, 205, 196, 0.8);
-        }
-        
-        .winner-cat { color: #ff9f43; text-shadow: 0 0 20px rgba(255, 159, 67, 0.8); }
-        .winner-mouse { color: #a29bfe; text-shadow: 0 0 20px rgba(162, 155, 254, 0.8); }
-        
-        .modal p {
-            color: #ccc;
-            margin: 10px 0;
+        .game-desc {
+            color: #aaa;
+            font-size: 0.95rem;
             line-height: 1.6;
+            margin-bottom: 15px;
         }
         
-        .btn {
+        .game-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .tag {
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .play-btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 25px;
             background: linear-gradient(45deg, #4ecdc4, #44a3aa);
-            border: none;
             color: white;
-            padding: 15px 40px;
-            font-size: 1.1rem;
-            border-radius: 30px;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s;
-            box-shadow: 0 5px 20px rgba(78, 205, 196, 0.4);
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(78, 205, 196, 0.6);
-        }
-        
-        .hidden { display: none !important; }
-        
-        .final-score {
-            font-size: 3rem;
-            margin: 20px 0;
+            text-decoration: none;
+            border-radius: 25px;
             font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+        
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.5);
+        }
+        
+        /* 页脚 */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 60px;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .games-container {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1 class="title">🐱 猫鼠大战 🐭</h1>
-    <p class="subtitle">双人游戏 | 先点击游戏区域激活键盘！</p>
+    <header>
+        <h1>🎮 游戏中心</h1>
+        <p class="subtitle">Game Center - 精选HTML5小游戏</p>
+    </header>
     
-    <canvas id="gameCanvas" width="1000" height="700"></canvas>
+    <main class="games-container">
+        <!-- 猫鼠大战 -->
+        <div class="game-card" onclick="window.location.href='./games/cat-mouse/'">
+            <div class="game-preview">
+                <span class="game-icon">🐱🐭</span>
+            </div>
+            <div class="game-info">
+                <h2 class="game-title">猫鼠大战</h2>
+                <p class="game-desc">双人同屏对战游戏！玩家1用WASD控制猫咪抓老鼠，玩家2用鼠标控制老鼠逃跑。猫咪抓3次获胜，或老鼠坚持2分钟获胜！</p>
+                <div class="game-meta">
+                    <span class="tag">双人</span>
+                    <span class="tag">对战</span>
+                    <span class="tag">HTML5</span>
+                </div>
+                <a href="./games/cat-mouse/" class="play-btn">开始游戏 →</a>
+            </div>
+        </div>
+        
+        <!-- 占位：更多游戏 -->
+        <div class="game-card" style="opacity: 0.5;">
+            <div class="game-preview" style="background: linear-gradient(135deg, #1a1f3a 0%, #0f1419 100%);">
+                <span class="game-icon" style="filter: grayscale(100%);">🎲</span>
+            </div>
+            <div class="game-info">
+                <h2 class="game-title">敬请期待</h2>
+                <p class="game-desc">更多游戏正在开发中，敬请期待...</p>
+                <div class="game-meta">
+                    <span class="tag" style="background: rgba(255,255,255,0.1); color: #666;">即将上线</span>
+                </div>
+            </div>
+        </div>
+    </main>
     
-    <div class="controls">
-        <div class="control-box cat-control">
-            <h3>🐱 小猫（抓）</h3>
-            <p>WASD 或方向键移动</p>
-            <p>抓到老鼠3次获胜！</p>
-        </div>
-        <div class="control-box mouse-control">
-            <h3>🐭 老鼠（逃）</h3>
-            <p>鼠标移动控制</p>
-            <p>坚持2分钟获胜！</p>
-        </div>
-    </div>
-
-    <!-- 开始界面 -->
-    <div class="modal start-modal" id="startModal">
-        <div class="modal-content">
-            <h2>准备好了吗？</h2>
-            <p>🐱 玩家1：用 WASD 控制猫咪抓老鼠</p>
-            <p>🐭 玩家2：用鼠标控制老鼠逃跑</p>
-            <p>猫咪抓3次获胜，或老鼠坚持2分钟获胜！</p>
-            <button class="btn" onclick="startGame()">开始游戏</button>
-        </div>
-    </div>
-
-    <!-- 游戏结束界面 -->
-    <div class="modal game-over-modal hidden" id="gameOverModal">
-        <div class="modal-content">
-            <h2 id="winnerText">游戏结束</h2>
-            <div class="final-score" id="finalScore"></div>
-            <p id="gameOverReason"></p>
-            <button class="btn" onclick="restartGame()">再玩一次</button>
-        </div>
-    </div>
-
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const startModal = document.getElementById('startModal');
-        const gameOverModal = document.getElementById('gameOverModal');
-        const winnerText = document.getElementById('winnerText');
-        const finalScore = document.getElementById('finalScore');
-        const gameOverReason = document.getElementById('gameOverReason');
-        
-        // 游戏配置
-        const CANVAS_WIDTH = 1000;
-        const CANVAS_HEIGHT = 700;
-        const CAT_SPEED = 4;
-        const MOUSE_SPEED = 5.5;
-        const GAME_DURATION = 120; // 2分钟
-        const WIN_SCORE = 3;
-        
-        // 颜色定义
-        const COLORS = {
-            white: '#ffffff',
-            black: '#323232',
-            gray: '#c8c8c8',
-            brown: '#a06e3c',
-            darkBrown: '#644628',
-            pink: '#ffb6c1',
-            red: '#ff6464',
-            blue: '#6496ff',
-            green: '#329632',
-            yellow: '#ffff64',
-            orange: '#ffc864',
-            bg: '#e6f5ff',
-            grid: '#d2e1f0'
-        };
-        
-        // 游戏状态
-        let cat = { x: 200, y: 200, vx: 0, vy: 0, facingRight: true };
-        let mouse = { x: 700, y: 500, trail: [], angle: 0 };
-        let catScore = 0;
-        let startTime = 0;
-        let gameRunning = false;
-        let gameOver = false;
-        let winner = null;
-        let effects = [];
-        let invincibleUntil = 0;
-        let keys = {};
-        let mousePos = { x: 700, y: 500 };
-        let lastTime = 0;
-        
-        // 键盘事件
-        document.addEventListener('keydown', (e) => {
-            keys[e.key.toLowerCase()] = true;
-            if (e.key === 'ArrowUp') keys['w'] = true;
-            if (e.key === 'ArrowDown') keys['s'] = true;
-            if (e.key === 'ArrowLeft') keys['a'] = true;
-            if (e.key === 'ArrowRight') keys['d'] = true;
-        });
-        
-        document.addEventListener('keyup', (e) => {
-            keys[e.key.toLowerCase()] = false;
-            if (e.key === 'ArrowUp') keys['w'] = false;
-            if (e.key === 'ArrowDown') keys['s'] = false;
-            if (e.key === 'ArrowLeft') keys['a'] = false;
-            if (e.key === 'ArrowRight') keys['d'] = false;
-        });
-        
-        // 鼠标事件
-        canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            mousePos.x = (e.clientX - rect.left) * scaleX;
-            mousePos.y = (e.clientY - rect.top) * scaleY;
-        });
-        
-        function updateCat() {
-            let dx = 0, dy = 0;
-            
-            if (keys['w']) dy = -1;
-            if (keys['s']) dy = 1;
-            if (keys['a']) { dx = -1; cat.facingRight = false; }
-            if (keys['d']) { dx = 1; cat.facingRight = true; }
-            
-            // 斜向速度归一化
-            if (dx !== 0 && dy !== 0) {
-                dx *= 0.707;
-                dy *= 0.707;
-            }
-            
-            cat.x += dx * CAT_SPEED;
-            cat.y += dy * CAT_SPEED;
-            
-            // 边界限制
-            cat.x = Math.max(35, Math.min(CANVAS_WIDTH - 35, cat.x));
-            cat.y = Math.max(35, Math.min(CANVAS_HEIGHT - 35, cat.y));
-        }
-        
-        function updateMouse() {
-            const dx = mousePos.x - mouse.x;
-            const dy = mousePos.y - mouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            
-            if (dist > 3) {
-                const moveX = (dx / dist) * Math.min(dist, MOUSE_SPEED);
-                const moveY = (dy / dist) * Math.min(dist, MOUSE_SPEED);
-                mouse.x += moveX;
-                mouse.y += moveY;
-                mouse.angle = Math.atan2(moveY, moveX);
-            }
-            
-            // 边界限制
-            mouse.x = Math.max(20, Math.min(CANVAS_WIDTH - 20, mouse.x));
-            mouse.y = Math.max(20, Math.min(CANVAS_HEIGHT - 20, mouse.y));
-            
-            // 更新轨迹
-            mouse.trail.push({ x: mouse.x, y: mouse.y });
-            if (mouse.trail.length > 6) mouse.trail.shift();
-        }
-        
-        function checkCatch() {
-            if (Date.now() < invincibleUntil) return false;
-            
-            const dx = cat.x - mouse.x;
-            const dy = cat.y - mouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            
-            if (dist < 45) {
-                catScore++;
-                
-                // 添加特效
-                for (let i = 0; i < 10; i++) {
-                    effects.push({
-                        x: mouse.x,
-                        y: mouse.y,
-                        vx: (Math.random() - 0.5) * 10,
-                        vy: (Math.random() - 0.5) * 10,
-                        life: 30,
-                        color: [COLORS.red, COLORS.yellow, COLORS.orange][Math.floor(Math.random() * 3)]
-                    });
-                }
-                
-                // 重置位置
-                cat.x = Math.random() > 0.5 ? 150 : 850;
-                cat.y = Math.random() > 0.5 ? 150 : 550;
-                mouse.x = Math.random() > 0.5 ? 150 : 850;
-                mouse.y = Math.random() > 0.5 ? 150 : 550;
-                mouse.trail = [];
-                mousePos.x = mouse.x;
-                mousePos.y = mouse.y;
-                invincibleUntil = Date.now() + 1500;
-                
-                if (catScore >= WIN_SCORE) {
-                    gameOver = true;
-                    winner = 'cat';
-                }
-                
-                return true;
-            }
-            return false;
-        }
-        
-        function updateEffects() {
-            effects = effects.filter(e => {
-                e.x += e.vx;
-                e.y += e.vy;
-                e.life--;
-                return e.life > 0;
-            });
-        }
-        
-        function drawCat() {
-            const x = cat.x;
-            const y = cat.y;
-            
-            // 阴影
-            ctx.fillStyle = 'rgba(180, 180, 180, 0.5)';
-            ctx.beginPath();
-            ctx.ellipse(x, y + 35, 25, 8, 0, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 尾巴
-            ctx.strokeStyle = COLORS.brown;
-            ctx.lineWidth = 8;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            const tailBaseX = cat.facingRight ? x - 30 : x + 30;
-            ctx.moveTo(tailBaseX, y - 5);
-            ctx.quadraticCurveTo(
-                tailBaseX + (cat.facingRight ? -20 : 20), y + 20,
-                tailBaseX + (cat.facingRight ? -10 : 10), y + 35
-            );
-            ctx.stroke();
-            
-            // 身体
-            ctx.fillStyle = '#f5e6d2';
-            ctx.strokeStyle = COLORS.brown;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.ellipse(x, y, 30, 25, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            
-            // 头
-            ctx.beginPath();
-            ctx.arc(x, y - 25, 28, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            
-            // 耳朵
-            const dir = cat.facingRight ? 1 : -1;
-            ctx.fillStyle = COLORS.brown;
-            // 左耳
-            ctx.beginPath();
-            ctx.moveTo(x - 5 * dir, y - 45);
-            ctx.lineTo(x - 20 * dir, y - 75);
-            ctx.lineTo(x + 5 * dir, y - 50);
-            ctx.closePath();
-            ctx.fill();
-            // 右耳
-            ctx.beginPath();
-            ctx.moveTo(x + 15 * dir, y - 45);
-            ctx.lineTo(x + 30 * dir, y - 75);
-            ctx.lineTo(x + 25 * dir, y - 50);
-            ctx.closePath();
-            ctx.fill();
-            
-            // 眼睛
-            const eyeBaseX = x + 10 * dir;
-            ctx.fillStyle = COLORS.white;
-            ctx.beginPath();
-            ctx.ellipse(eyeBaseX - 8, y - 32, 6, 8, 0, 0, Math.PI * 2);
-            ctx.ellipse(eyeBaseX + 8, y - 32, 6, 8, 0, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = COLORS.black;
-            ctx.beginPath();
-            ctx.arc(eyeBaseX - 7, y - 30, 4, 0, Math.PI * 2);
-            ctx.arc(eyeBaseX + 7, y - 30, 4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 鼻子
-            ctx.fillStyle = COLORS.pink;
-            ctx.beginPath();
-            ctx.arc(x + 5 * dir, y - 18, 3, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 胡须
-            ctx.strokeStyle = COLORS.black;
-            ctx.lineWidth = 1;
-            for (let offset of [-5, 0, 5]) {
-                ctx.beginPath();
-                ctx.moveTo(x + 15 * dir, y - 20 + offset);
-                ctx.lineTo(x + 35 * dir, y - 23 + offset);
-                ctx.stroke();
-            }
-        }
-        
-        function drawMouse() {
-            const x = mouse.x;
-            const y = mouse.y;
-            
-            // 轨迹
-            mouse.trail.forEach((pos, i) => {
-                const alpha = i / mouse.trail.length;
-                ctx.fillStyle = `rgba(150, 150, 150, ${alpha})`;
-                ctx.beginPath();
-                ctx.arc(pos.x, pos.y, 4 * alpha, 0, Math.PI * 2);
-                ctx.fill();
-            });
-            
-            // 身体
-            ctx.fillStyle = COLORS.gray;
-            ctx.strokeStyle = COLORS.black;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.ellipse(x, y, 15, 10, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            
-            // 头
-            const headX = x + Math.cos(mouse.angle) * 12;
-            const headY = y + Math.sin(mouse.angle) * 8;
-            ctx.beginPath();
-            ctx.arc(headX, headY, 10, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            
-            // 耳朵
-            ctx.fillStyle = COLORS.gray;
-            ctx.beginPath();
-            ctx.arc(headX - 6, headY - 6, 4, 0, Math.PI * 2);
-            ctx.arc(headX + 6, headY - 6, 4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 眼睛
-            ctx.fillStyle = COLORS.black;
-            ctx.beginPath();
-            ctx.arc(headX - 3, headY - 2, 2, 0, Math.PI * 2);
-            ctx.arc(headX + 3, headY - 2, 2, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 尾巴
-            ctx.strokeStyle = '#646464';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            const tailX = x - Math.cos(mouse.angle) * 20;
-            const tailY = y - Math.sin(mouse.angle) * 15;
-            ctx.moveTo(x, y);
-            ctx.lineTo(tailX, tailY);
-            ctx.stroke();
-        }
-        
-        function draw() {
-            // 背景
-            ctx.fillStyle = COLORS.bg;
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            
-            // 网格
-            ctx.strokeStyle = COLORS.grid;
-            ctx.lineWidth = 1;
-            for (let i = 0; i <= CANVAS_WIDTH; i += 50) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, CANVAS_HEIGHT);
-                ctx.stroke();
-            }
-            for (let i = 0; i <= CANVAS_HEIGHT; i += 50) {
-                ctx.beginPath();
-                ctx.moveTo(0, i);
-                ctx.lineTo(CANVAS_WIDTH, i);
-                ctx.stroke();
-            }
-            
-            // 绘制角色
-            drawCat();
-            drawMouse();
-            
-            // 无敌闪烁
-            if (Date.now() < invincibleUntil) {
-                if (Math.floor(Date.now() / 100) % 2) {
-                    ctx.strokeStyle = COLORS.yellow;
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    ctx.arc(mouse.x, mouse.y, 25, 0, Math.PI * 2);
-                    ctx.stroke();
-                }
-            }
-            
-            // 特效
-            effects.forEach(e => {
-                ctx.fillStyle = e.color;
-                ctx.globalAlpha = e.life / 30;
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, e.life / 5, 0, Math.PI * 2);
-                ctx.fill();
-            });
-            ctx.globalAlpha = 1;
-            
-            // UI背景
-            ctx.fillStyle = 'rgba(40, 40, 60, 0.9)';
-            ctx.fillRect(0, 0, CANVAS_WIDTH, 80);
-            
-            // 分数
-            ctx.fillStyle = COLORS.orange;
-            ctx.font = 'bold 24px Microsoft YaHei';
-            ctx.fillText(`🐱 小猫: ${catScore}/${WIN_SCORE}`, 30, 50);
-            
-            // 时间
-            const elapsed = (Date.now() - startTime) / 1000;
-            const remaining = Math.max(0, GAME_DURATION - elapsed);
-            const mins = Math.floor(remaining / 60);
-            const secs = Math.floor(remaining % 60);
-            const timeStr = `⏰ ${mins}:${secs.toString().padStart(2, '0')}`;
-            
-            ctx.fillStyle = remaining < 30 ? COLORS.red : COLORS.white;
-            if (remaining < 30) {
-                ctx.shadowColor = COLORS.red;
-                ctx.shadowBlur = 10;
-            }
-            ctx.fillText(timeStr, 850, 50);
-            ctx.shadowBlur = 0;
-            
-            // 操作提示
-            ctx.fillStyle = '#b4b4c8';
-            ctx.font = '20px Microsoft YaHei';
-            ctx.fillText('WASD控制小猫 | 鼠标控制老鼠', 350, 50);
-        }
-        
-        function gameLoop(timestamp) {
-            if (!gameRunning) return;
-            
-            if (!gameOver) {
-                updateCat();
-                updateMouse();
-                checkCatch();
-                updateEffects();
-                
-                // 检查时间
-                const elapsed = (Date.now() - startTime) / 1000;
-                if (elapsed >= GAME_DURATION) {
-                    gameOver = true;
-                    winner = 'mouse';
-                }
-            }
-            
-            draw();
-            
-            if (gameOver) {
-                showGameOver();
-                return;
-            }
-            
-            requestAnimationFrame(gameLoop);
-        }
-        
-        function showGameOver() {
-            gameRunning = false;
-            
-            if (winner === 'cat') {
-                winnerText.textContent = '🐱 小猫获胜！';
-                winnerText.className = 'winner-cat';
-                finalScore.textContent = `${catScore} 次抓住`;
-                gameOverReason.textContent = '老鼠被抓住了！';
-            } else {
-                winnerText.textContent = '🐭 老鼠获胜！';
-                winnerText.className = 'winner-mouse';
-                finalScore.textContent = '坚持2分钟';
-                gameOverReason.textContent = '时间到，老鼠逃脱了！';
-            }
-            
-            gameOverModal.classList.remove('hidden');
-        }
-        
-        function startGame() {
-            startModal.classList.add('hidden');
-            gameOverModal.classList.add('hidden');
-            
-            // 重置状态
-            cat = { x: 200, y: 200, vx: 0, vy: 0, facingRight: true };
-            mouse = { x: 700, y: 500, trail: [], angle: 0 };
-            catScore = 0;
-            startTime = Date.now();
-            gameRunning = true;
-            gameOver = false;
-            winner = null;
-            effects = [];
-            invincibleUntil = 0;
-            keys = {};
-            
-            requestAnimationFrame(gameLoop);
-        }
-        
-        function restartGame() {
-            startGame();
-        }
-        
-        // 初始绘制
-        draw();
-    </script>
+    <footer>
+        <p>© 2024 Game Center | 使用 HTML5 + JavaScript 构建</p>
+        <p style="margin-top: 10px; font-size: 0.9rem;">Hosted on Vercel</p>
+    </footer>
 </body>
 </html>
