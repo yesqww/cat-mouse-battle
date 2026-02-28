@@ -205,37 +205,26 @@
         const SAFE_ZONE_DURATION = 3000;
         const SAFE_ZONE_COOLDOWN = 5000;
         
-        // 用户上传的猫咪图片 (JPEG压缩版)
+        // 用户上传的猫咪图片
         const catImage = new Image();
-        catImage.src = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCAA8ADwDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwAtJVhuFMjAKDyTWrda1ax2zNFPG5A5CsM1jWwSabbkjg88VU8QWMJg3lSjgfe6VmmaNGLrWpTT3RlQsM1jL9oc53HmrImYRgPng9/SrM9tcLYJd+S3kOceYF4B9DVohkNobg3KxxyHI6+1dIJJLZQXlLcc5rC0h1jumkdcqeTitu9nsntC6ueoO0r/APXqbjL8U6zQEHr7ViXNrF57cN+ZqW0uhnjoRUc7gyk5Ip3JsdBZApMSjE8duKpakyrdMjrmZuzf/rp8U7jzDGu0gcHOaj0vRr25n8+O1a6O/J3HA/M1CNWaHh3wZbXF8Lm7jaRNu5Afuse+fpXevpNq1k1r5EfkkYKbRiuAt/FOu6brqWl1HbpbxSGOaBUAZTnA29zxznoRXo5usW7NxuUEkD2q0zJo8i1PRP7MuJNkRT96+wAcBQcAk+9Z019LKRFJ8ykYzjGK07XRta1O/kvZYb8GciWSSSNlCDByAT97PAAH9Kq3GmTWy4kTlWIJ29KkpFaDKJ15FRTS/vDzV1bfapx0PNZ0kZMr+xovoO2p2mk28dzv3DGeBx1rrdLQW8axqOB61yGnyfZ7lfmHNdZa3G9AQeKmL0Kka7x20x3ukfm4wGKgtj0zWXJeNDfLpf2Wd5n+ZWCYVlzyc9OKtRSkZIGfrTH3SypI7urJnaFbAFacxCSRpgRxJgKc9OlY+qadb3YOUq8ru4+diRVW9uo4ISWPFJu5KVjhtctIbJCVOPauVgPmB23bsucHGK2vFOpC5BUFWIJ4zXP2R22qg9SSevvWctEbQ1Z1JkEL78/rmtWz1YKuWbAUcn+lZs6hsg1QkJBGCcZ6VKZTVzu7fVYm+UnmrX2kMhbI4OPpXm8V5Ojkhzyali1i+jO4TE54IPTFVzE8p6DNqKwoDkGub1/Vla3aPf8AMRxg8iuduNUu33L5pAVsDFUJJHk5dyxo5hcpVuc3EhdvvHrx1qOIbYwPSp2ReeKiUAZHvWcnoawWp//Z';
+        catImage.src = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCAA8ADwDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwAtJVhuFMjAKDyTWrda1ax2zNFPG5A5CsM1jWwSabbkjg88VU8QWMJg3lSjgfe6VmmaNGLrWpTT3RlQsM1jL9oc53HmrImYRgPng9/SrM9tcLYJd+S3kOceYF4B9DVohkNobg3KxxyHI6+1dIJJLZQXlLcc5rC0h1jumkdcqeTitu9nsntC6ueoO0r/APXqbjL8U6zQEHr7ViXNrF57cN+ZqW0uhnjoRUc7gyk5Ip3JsdBZApMSjE8duKpakyrdMjrmZuzf/rp8U7jzDGu0gcHOaj0vRr25n8+O1a6O/J3HA/M1CNWaHh3wZbXF8Lm7jaRNu5Afuse+fpXevpNq1k1r5EfkkYKbRiuAt/FOu6brqWl1HbpbxSGOaBUAZTnA29zxznoRXo5usW7NxuUEkD2q0zJo8i1PRP7MuJNkRT96+wAcBQcAk+9Z019LKRFJ8ykYzjGK07XRta1O/kvZYb8GciWSSSNlCDByAT97PAAH9Kq3GmTWy4kTlWIJ29KkpFaDKJ15FRTS/vDzV1bfapx0PNZ0kZMr+xovoO2p2mk28dzv3DGeBx1rrdLQW8axqOB61yGnyfZ7lfmHNdZa3G9AQeKmL0Kka7x20x3ukfm4wGKgtj0zWXJeNDfLpf2Wd5n+ZWCYVlzyc9OKtRSkZIGfrTH3SypI7urJnaFbAFacxCCRpgRxJgKc9OlY+qadb3YOUq8ru4+diRVW9uo4ISWPFJu5KVjhtctIbJCVOPauVgPmB23bsucHGK2vFOpC5BUFWIJ4zXP2R22qg9SSevvWctEbQ1Z1JkEL78/rmtWz1YKuWbAUcn+lZs6hsg1QkJBGCcZ6VKZTVzu7fVYm+UnmrX2kMhbI4OPpXm8V5Ojkhzyali1i+jO4TE54IPTFVzE8p6DNqKwoDkGub1/Vla3aPf8AMRxg8iuduNUu33L5pAVsDFVJJHk5dyxo5hcpVuc3EhdvvHrx1qOIbYwPSp2ReeKiUAZHvWcnoawWp//Z';
         
-        // 游戏状态
-        let gameRunning = false;
-        let gameOver = false;
-        let catScore = 0;
-        let startTime = 0;
-        let animationId = null;
+        // 安全重生点
+        const safeRespawnPoints = [
+            { x: 100, y: 100 }, { x: 900, y: 600 },
+            { x: 100, y: 600 }, { x: 900, y: 100 },
+            { x: 100, y: 350 }, { x: 900, y: 350 },
+            { x: 400, y: 100 }, { x: 600, y: 600 }
+        ];
         
-        // 角色状态
-        let cat = { 
-            x: 200, y: 200, 
-            vx: 0, vy: 0, 
-            angle: 0,
-            energy: 100,
-            isBoosting: false,
-            width: 60, height: 60
-        };
-        
-        let mouse = { 
-            x: 700, y: 500, 
-            angle: 0,
-            invincibleUntil: 0,
-            safeZoneCooldownUntil: 0,
-            radius: 15
-        };
-        
-        let keys = {};
-        let mousePos = { x: 700, y: 500 };
+        // 障碍物配置
+        const obstacles = [
+            { x: 500, y: 350, width: 100, height: 40 },
+            { x: 300, y: 500, width: 40, height: 100 },
+            { x: 700, y: 200, width: 40, height: 100 },
+            { x: 200, y: 300, width: 80, height: 30 },
+            { x: 750, y: 400, width: 80, height: 30 }
+        ];
         
         // 安全区配置
         const safeZones = [
@@ -243,14 +232,19 @@
             { x: 850, y: 550, radius: 60, active: true }
         ];
         
-        // 障碍物配置 (棕色方块)
-        const obstacles = [
-            { x: 500, y: 350, width: 100, height: 40 },  // 中央横条
-            { x: 300, y: 500, width: 40, height: 100 },  // 左下竖条
-            { x: 700, y: 200, width: 40, height: 100 },  // 右上竖条
-            { x: 200, y: 300, width: 80, height: 30 },   // 左中横条
-            { x: 750, y: 400, width: 80, height: 30 }    // 右中横条
-        ];
+        // 游戏状态变量
+        let gameRunning = false;
+        let gameOver = false;
+        let catScore = 0;
+        let startTime = 0;
+        let animationId = null;
+        let keys = {};
+        
+        // 角色状态 - 使用 var 确保全局可访问
+        var mousePos = { x: 700, y: 500 };
+        
+        let cat = { x: 200, y: 200, angle: 0, energy: 100, isBoosting: false, radius: 30 };
+        let mouse = { x: 700, y: 500, angle: 0, invincibleUntil: 0, safeZoneCooldownUntil: 0, radius: 15 };
         
         // DOM 元素
         const canvas = document.getElementById('gameCanvas');
@@ -261,7 +255,44 @@
         const finalScore = document.getElementById('finalScore');
         const gameOverReason = document.getElementById('gameOverReason');
         
-        // 键盘事件监听
+        // 检查位置是否与障碍物碰撞（带边距）
+        function checkCollisionWithObstacles(x, y, radius) {
+            for (let obs of obstacles) {
+                const margin = 5;
+                if (x + radius + margin > obs.x && 
+                    x - radius - margin < obs.x + obs.width &&
+                    y + radius + margin > obs.y && 
+                    y - radius - margin < obs.y + obs.height) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        // 获取随机安全位置
+        function getSafePosition(radius, otherX, otherY) {
+            let pos;
+            let attempts = 0;
+            do {
+                if (attempts < 20) {
+                    pos = safeRespawnPoints[Math.floor(Math.random() * safeRespawnPoints.length)];
+                    pos = {
+                        x: pos.x + (Math.random() - 0.5) * 40,
+                        y: pos.y + (Math.random() - 0.5) * 40
+                    };
+                } else {
+                    pos = {
+                        x: 50 + Math.random() * (CANVAS_WIDTH - 100),
+                        y: 50 + Math.random() * (CANVAS_HEIGHT - 100)
+                    };
+                }
+                attempts++;
+            } while (checkCollisionWithObstacles(pos.x, pos.y, radius) || 
+                     (Math.abs(pos.x - otherX) < 100 && Math.abs(pos.y - otherY) < 100));
+            return pos;
+        }
+        
+        // 键盘事件
         document.addEventListener('keydown', (e) => {
             keys[e.key.toLowerCase()] = true;
             if (e.key === 'ArrowUp') keys['w'] = true;
@@ -280,7 +311,7 @@
             if (e.key === 'Shift') keys['shift'] = false;
         });
         
-        // 鼠标事件监听
+        // 鼠标事件
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -289,40 +320,7 @@
             mousePos.y = (e.clientY - rect.top) * scaleY;
         });
         
-        // 检查点是否在矩形内（障碍物碰撞）
-        function checkObstacleCollision(x, y, radius) {
-            for (let obs of obstacles) {
-                if (x + radius > obs.x && x - radius < obs.x + obs.width &&
-                    y + radius > obs.y && y - radius < obs.y + obs.height) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        // 获取障碍物的推开向量
-        function getObstaclePushVector(x, y, radius) {
-            let pushX = 0, pushY = 0;
-            for (let obs of obstacles) {
-                if (x + radius > obs.x && x - radius < obs.x + obs.width &&
-                    y + radius > obs.y && y - radius < obs.y + obs.height) {
-                    
-                    const centerX = obs.x + obs.width / 2;
-                    const centerY = obs.y + obs.height / 2;
-                    const dx = x - centerX;
-                    const dy = y - centerY;
-                    
-                    if (Math.abs(dx) / obs.width > Math.abs(dy) / obs.height) {
-                        pushX = dx > 0 ? 5 : -5;
-                    } else {
-                        pushY = dy > 0 ? 5 : -5;
-                    }
-                }
-            }
-            return { x: pushX, y: pushY };
-        }
-        
-        // 更新猫咪位置
+        // 更新猫咪
         function updateCat() {
             let dx = 0, dy = 0;
             
@@ -331,13 +329,11 @@
             if (keys['a']) { dx = -1; cat.angle = Math.PI; }
             if (keys['d']) { dx = 1; cat.angle = 0; }
             
-            // 斜向移动归一化
             if (dx !== 0 && dy !== 0) {
                 dx *= 0.707;
                 dy *= 0.707;
             }
             
-            // 加速逻辑
             cat.isBoosting = keys['shift'] && cat.energy > 0;
             let currentSpeed = cat.isBoosting ? CAT_BOOST_SPEED : CAT_SPEED;
             
@@ -350,20 +346,18 @@
             let newX = cat.x + dx * currentSpeed;
             let newY = cat.y + dy * currentSpeed;
             
-            // 边界限制
             newX = Math.max(30, Math.min(CANVAS_WIDTH - 30, newX));
             newY = Math.max(30, Math.min(CANVAS_HEIGHT - 30, newY));
             
-            // 障碍物碰撞检测
-            if (!checkObstacleCollision(newX, cat.y, 30)) {
+            if (!checkCollisionWithObstacles(newX, cat.y, cat.radius)) {
                 cat.x = newX;
             }
-            if (!checkObstacleCollision(cat.x, newY, 30)) {
+            if (!checkCollisionWithObstacles(cat.x, newY, cat.radius)) {
                 cat.y = newY;
             }
         }
         
-        // 更新老鼠位置
+        // 更新老鼠
         function updateMouse() {
             const dx = mousePos.x - mouse.x;
             const dy = mousePos.y - mouse.y;
@@ -376,15 +370,13 @@
                 let newX = mouse.x + moveX;
                 let newY = mouse.y + moveY;
                 
-                // 边界限制
                 newX = Math.max(15, Math.min(CANVAS_WIDTH - 15, newX));
                 newY = Math.max(15, Math.min(CANVAS_HEIGHT - 15, newY));
                 
-                // 障碍物碰撞检测
-                if (!checkObstacleCollision(newX, mouse.y, mouse.radius)) {
+                if (!checkCollisionWithObstacles(newX, mouse.y, mouse.radius)) {
                     mouse.x = newX;
                 }
-                if (!checkObstacleCollision(mouse.x, newY, mouse.radius)) {
+                if (!checkCollisionWithObstacles(mouse.x, newY, mouse.radius)) {
                     mouse.y = newY;
                 }
                 
@@ -399,7 +391,6 @@
                     if (dist < zone.radius && zone.active) {
                         mouse.invincibleUntil = now + SAFE_ZONE_DURATION;
                         mouse.safeZoneCooldownUntil = now + SAFE_ZONE_COOLDOWN;
-                        // 重置安全区
                         zone.active = false;
                         setTimeout(() => { zone.active = true; }, SAFE_ZONE_COOLDOWN);
                         break;
@@ -417,23 +408,29 @@
             const dy = cat.y - mouse.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
             
-            if (dist < 40) {
+            if (dist < 45) {
                 catScore++;
                 
-                // 重置位置
-                cat.x = Math.random() > 0.5 ? 150 : 850;
-                cat.y = Math.random() > 0.5 ? 150 : 550;
-                mouse.x = Math.random() > 0.5 ? 700 : 300;
-                mouse.y = Math.random() > 0.5 ? 500 : 200;
+                // 使用安全重生点
+                const catPos = getSafePosition(cat.radius, 0, 0);
+                cat.x = catPos.x;
+                cat.y = catPos.y;
+                
+                const mouseNewPos = getSafePosition(mouse.radius, cat.x, cat.y);
+                mouse.x = mouseNewPos.x;
+                mouse.y = mouseNewPos.y;
+                
+                // 重置鼠标控制目标 - 使用全局 mousePos 变量
                 mousePos.x = mouse.x;
                 mousePos.y = mouse.y;
+                
                 mouse.invincibleUntil = now + 2000;
                 
                 if (catScore >= WIN_SCORE) {
                     gameOver = true;
                     winnerText.textContent = '🐱 小猫获胜！';
                     winnerText.className = 'winner-cat';
-                    finalScore.textContent = `${catScore} 次抓住`;
+                    finalScore.textContent = catScore + ' 次抓住';
                     gameOverReason.textContent = '老鼠被抓住了！';
                 }
                 
@@ -458,13 +455,12 @@
             return remaining;
         }
         
-        // 绘制函数
+        // 绘制
         function draw() {
-            // 清空画布
             ctx.fillStyle = '#e6f5ff';
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             
-            // 绘制网格背景
+            // 网格
             ctx.strokeStyle = '#d2e1f0';
             ctx.lineWidth = 1;
             for (let i = 0; i <= CANVAS_WIDTH; i += 50) {
@@ -480,7 +476,7 @@
                 ctx.stroke();
             }
             
-            // 绘制安全区
+            // 安全区
             const now = Date.now();
             for (let zone of safeZones) {
                 if (zone.active) {
@@ -491,8 +487,6 @@
                     ctx.arc(zone.x, zone.y, zone.radius, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.stroke();
-                    
-                    // 房子图标
                     ctx.fillStyle = '#27ae60';
                     ctx.font = '30px Arial';
                     ctx.textAlign = 'center';
@@ -500,15 +494,13 @@
                 }
             }
             
-            // 绘制障碍物
+            // 障碍物
             ctx.fillStyle = '#8b6f47';
             ctx.strokeStyle = '#5d4e37';
             ctx.lineWidth = 2;
             for (let obs of obstacles) {
                 ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
                 ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
-                
-                // 添加纹理效果
                 ctx.strokeStyle = 'rgba(0,0,0,0.2)';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -517,9 +509,11 @@
                 ctx.moveTo(obs.x + obs.width, obs.y);
                 ctx.lineTo(obs.x, obs.y + obs.height);
                 ctx.stroke();
+                ctx.strokeStyle = '#5d4e37';
+                ctx.lineWidth = 2;
             }
             
-            // 绘制猫咪（使用上传的图片）
+            // 猫咪
             ctx.save();
             ctx.translate(cat.x, cat.y);
             if (cat.angle > Math.PI / 2 || cat.angle < -Math.PI / 2) {
@@ -528,7 +522,6 @@
             ctx.drawImage(catImage, -30, -30, 60, 60);
             ctx.restore();
             
-            // 绘制加速特效
             if (cat.isBoosting) {
                 ctx.strokeStyle = 'rgba(255, 159, 67, 0.8)';
                 ctx.lineWidth = 3;
@@ -537,41 +530,32 @@
                 ctx.stroke();
             }
             
-            // 绘制老鼠
+            // 老鼠
             ctx.save();
             ctx.translate(mouse.x, mouse.y);
             ctx.rotate(mouse.angle);
-            
-            // 老鼠身体
             ctx.fillStyle = '#95a5a6';
             ctx.beginPath();
             ctx.ellipse(0, 0, 15, 10, 0, 0, Math.PI * 2);
             ctx.fill();
-            
-            // 老鼠头
             ctx.fillStyle = '#7f8c8d';
             ctx.beginPath();
             ctx.arc(12, 0, 8, 0, Math.PI * 2);
             ctx.fill();
-            
-            // 耳朵
             ctx.fillStyle = '#95a5a6';
             ctx.beginPath();
             ctx.arc(10, -6, 4, 0, Math.PI * 2);
             ctx.arc(10, 6, 4, 0, Math.PI * 2);
             ctx.fill();
-            
-            // 尾巴
             ctx.strokeStyle = '#7f8c8d';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(-10, 0);
             ctx.lineTo(-25, -8);
             ctx.stroke();
-            
             ctx.restore();
             
-            // 绘制无敌光环
+            // 无敌光环
             if (now < mouse.invincibleUntil) {
                 ctx.strokeStyle = '#f1c40f';
                 ctx.lineWidth = 3;
@@ -580,24 +564,21 @@
                 ctx.arc(mouse.x, mouse.y, 25, 0, Math.PI * 2);
                 ctx.stroke();
                 ctx.setLineDash([]);
-                
                 ctx.fillStyle = '#f1c40f';
                 ctx.font = 'bold 16px Arial';
                 ctx.textAlign = 'center';
                 ctx.fillText('无敌!', mouse.x, mouse.y - 30);
             }
             
-            // UI面板
+            // UI
             ctx.fillStyle = 'rgba(40, 40, 60, 0.95)';
             ctx.fillRect(0, 0, CANVAS_WIDTH, 80);
             
-            // 分数
             ctx.fillStyle = '#ff9f43';
             ctx.font = 'bold 24px Microsoft YaHei';
             ctx.textAlign = 'left';
-            ctx.fillText(`🐱 小猫: ${catScore}/${WIN_SCORE}`, 30, 50);
+            ctx.fillText('🐱 小猫: ' + catScore + '/' + WIN_SCORE, 30, 50);
             
-            // 能量条
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.fillRect(30, 60, 200, 15);
             ctx.fillStyle = cat.energy > 20 ? '#ff9f43' : '#e74c3c';
@@ -609,34 +590,29 @@
             ctx.font = '12px Arial';
             ctx.fillText('能量 (Shift冲刺)', 240, 72);
             
-            // 时间
             const remaining = checkTime();
             if (!gameOver) {
                 const mins = Math.floor(remaining / 60);
                 const secs = Math.floor(remaining % 60);
-                const timeStr = `⏰ ${mins}:${secs.toString().padStart(2, '0')}`;
-                
+                const timeStr = '⏰ ' + mins + ':' + secs.toString().padStart(2, '0');
                 ctx.textAlign = 'right';
                 ctx.fillStyle = remaining < 30 ? '#e74c3c' : '#fff';
                 ctx.font = 'bold 28px Microsoft YaHei';
-                ctx.fillText(timeStr, CANVAS_WIDTH - 30, 50);
-                
                 if (remaining < 30) {
                     ctx.shadowColor = '#e74c3c';
                     ctx.shadowBlur = 10;
-                    ctx.fillText(timeStr, CANVAS_WIDTH - 30, 50);
-                    ctx.shadowBlur = 0;
                 }
+                ctx.fillText(timeStr, CANVAS_WIDTH - 30, 50);
+                ctx.shadowBlur = 0;
             }
             
-            // 操作提示
             ctx.textAlign = 'center';
             ctx.fillStyle = '#b4b4c8';
             ctx.font = '18px Microsoft YaHei';
             ctx.fillText('WASD控制小猫 | 鼠标控制老鼠 | Shift加速', CANVAS_WIDTH / 2, 50);
         }
         
-        // 游戏主循环
+        // 游戏循环
         function gameLoop() {
             if (!gameRunning) return;
             
@@ -662,14 +638,24 @@
             startModal.classList.add('hidden');
             gameOverModal.classList.add('hidden');
             
-            // 重置状态
-            cat = { x: 200, y: 200, vx: 0, vy: 0, angle: 0, energy: 100, isBoosting: false, width: 60, height: 60 };
+            cat = { x: 200, y: 200, angle: 0, energy: 100, isBoosting: false, radius: 30 };
             mouse = { x: 700, y: 500, angle: 0, invincibleUntil: 0, safeZoneCooldownUntil: 0, radius: 15 };
             catScore = 0;
             startTime = Date.now();
             gameRunning = true;
             gameOver = false;
             keys = {};
+            mousePos = { x: 700, y: 500 };
+            
+            // 确保初始位置安全
+            const catPos = getSafePosition(cat.radius, 0, 0);
+            cat.x = catPos.x;
+            cat.y = catPos.y;
+            const mouseNewPos = getSafePosition(mouse.radius, cat.x, cat.y);
+            mouse.x = mouseNewPos.x;
+            mouse.y = mouseNewPos.y;
+            mousePos.x = mouse.x;
+            mousePos.y = mouse.y;
             
             gameLoop();
         }
@@ -678,11 +664,6 @@
         function restartGame() {
             startGame();
         }
-        
-        // 等待图片加载完成后绘制初始画面
-        catImage.onload = function() {
-            if (!gameRunning) draw();
-        };
         
         // 初始绘制
         if (catImage.complete) {
