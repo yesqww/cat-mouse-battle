@@ -133,6 +133,7 @@
             gap: 15px;
             font-size: 0.85rem;
             color: #666;
+            flex-wrap: wrap;
         }
         
         .tag {
@@ -141,6 +142,22 @@
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        
+        .tag-pc {
+            background: rgba(100, 149, 237, 0.2);
+            color: #6495ed;
+        }
+        
+        .tag-mobile {
+            background: rgba(50, 205, 50, 0.2);
+            color: #32cd32;
+        }
+        
+        .tag-hard {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
         }
         
         .play-btn {
@@ -194,42 +211,59 @@
                 <h2 class="game-title">猫鼠大战</h2>
                 <p class="game-desc">双人同屏对战游戏！玩家1用WASD控制猫咪抓老鼠，玩家2用鼠标控制老鼠逃跑。猫咪抓3次获胜，或老鼠坚持2分钟获胜！</p>
                 <div class="game-meta">
+                    <span class="tag tag-pc">💻 电脑版</span>
                     <span class="tag">双人</span>
                     <span class="tag">对战</span>
-                    <span class="tag">HTML5</span>
                 </div>
                 <a href="./games/cat-mouse/" class="play-btn">开始游戏 →</a>
             </div>
         </div>
         
-        <!-- 太空射击 双人电脑版 -->
-        <div class="game-card" onclick="window.location.href='./games/space-shooter-duo/'">
-            <div class="game-preview" style="background: linear-gradient(135deg, #2d1b1b 0%, #1a0f0f 100%);">
-                <span class="game-icon">🔥👥</span>
+        <!-- 赛博枪战 -->
+        <div class="game-card" onclick="window.location.href='./games/top-down-shooter/'">
+            <div class="game-preview" style="background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 100%);">
+                <span class="game-icon">⚡🔫</span>
             </div>
             <div class="game-info">
-                <h2 class="game-title">太空射击 双人电脑版</h2>
-                <p class="game-desc">⚡ 极限难度！双人键盘合作，自动开火，共抗外星大军！敌人更多更快更耐打，共享3条生命。WASD+方向键操作。</p>
+                <h2 class="game-title" style="color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.5);">赛博枪战</h2>
+                <p class="game-desc">赛博朋克风俯视射击！WASD移动，鼠标瞄准，摧毁 Neon 敌人。多种敌人类型（无人机、坦克、Boss），可破坏障碍物，屏幕震动特效！</p>
                 <div class="game-meta">
-                    <span class="tag" style="background: rgba(255,107,107,0.3); color: #ff6b6b;">五星级难度</span>
-                    <span class="tag">键盘双人</span>
-                    <span class="tag">合作</span>
+                    <span class="tag tag-pc">💻 电脑版</span>
+                    <span class="tag" style="background: rgba(0,255,255,0.2); color: #00ffff;">射击</span>
+                    <span class="tag" style="background: rgba(255,0,102,0.2); color: #ff0066;">赛博朋克</span>
+                </div>
+                <a href="./games/top-down-shooter/" class="play-btn" style="background: linear-gradient(45deg, #00ffff, #ff0066);">进入战斗 →</a>
+            </div>
+        </div>
+        
+        <!-- 太空射击 双人合作版 -->
+        <div class="game-card" onclick="window.location.href='./games/space-shooter-duo/'">
+            <div class="game-preview" style="background: linear-gradient(135deg, #2d1b1b 0%, #1a0f0f 100%);">
+                <span class="game-icon">🚀👥</span>
+            </div>
+            <div class="game-info">
+                <h2 class="game-title">太空射击 双人合作版</h2>
+                <p class="game-desc">双人键盘合作，自动开火，共抗外星大军！敌人种类繁多，共享生命，考验配合。P1用WASD，P2用方向键。</p>
+                <div class="game-meta">
+                    <span class="tag tag-pc">💻 电脑版</span>
+                    <span class="tag tag-hard">高难度</span>
+                    <span class="tag">双人合作</span>
                 </div>
                 <a href="./games/space-shooter-duo/" class="play-btn">开始挑战 →</a>
             </div>
         </div>
         
-        <!-- 太空射击 单人手机和电脑版 -->
+        <!-- 太空射击 经典版 -->
         <div class="game-card" onclick="window.location.href='./games/space-shooter/'">
             <div class="game-preview" style="background: linear-gradient(135deg, #1a1a3e 0%, #0f0f2e 100%);">
                 <span class="game-icon">🚀👾</span>
             </div>
             <div class="game-info">
-                <h2 class="game-title">单人太空射击手机和电脑版</h2>
-                <p class="game-desc">经典竖版射击游戏！驾驶飞船消灭外星敌人，收集道具升级武器，挑战更高分数！方向键移动，空格射击。</p>
+                <h2 class="game-title">太空射击 经典版</h2>
+                <p class="game-desc">经典竖版射击游戏！驾驶飞船消灭外星敌人，收集道具升级武器，挑战更高分数！支持键盘和触屏操作。</p>
                 <div class="game-meta">
+                    <span class="tag tag-mobile">📱 手机电脑通用</span>
                     <span class="tag">射击</span>
-                    <span class="tag">闯关</span>
                     <span class="tag">单人</span>
                 </div>
                 <a href="./games/space-shooter/" class="play-btn">开始游戏 →</a>
@@ -257,8 +291,3 @@
     </footer>
 </body>
 </html>
-
-
-
-
-
