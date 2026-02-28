@@ -122,7 +122,7 @@ let shake = 0;
 let player = { 
     x: 500, y: 350, 
     hp: 100, maxHp: 100,
-    ammo: 30, maxAmmo: 30,
+    ammo: 3000, maxAmmo: 3000,
     angle: 0, 
     reload: 0,
     recoil: 0
@@ -292,13 +292,13 @@ function update() {
     }
     
     // 换弹
-    if ((keys['r'] || player.ammo === 0) && player.ammo < 30 && player.reload === 0) {
+    if ((keys['r'] || player.ammo === 0) && player.ammo < 3000 && player.reload === 0) {
         player.reload = 90;
         floatingTexts.push({x: player.x, y: player.y-30, text: "RELOADING", life: 60, color: '#ffff00'});
     }
     if (player.reload > 0) {
         player.reload--;
-        if (player.reload === 0) player.ammo = 30;
+        if (player.reload === 0) player.ammo = 3000;
     }
     
     // 更新子弹
