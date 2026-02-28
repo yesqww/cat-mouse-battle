@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>红蓝大侠对决 - 人形版</title>
+    <title>红蓝大侠对决 - 修复版</title>
     <style>
         body {
             margin: 0;
@@ -168,7 +168,7 @@
             {x: 800, y: groundY, width: 100, height: 100}
         ];
         
-        // 玩家对象 - 更像人的设计
+        // 玩家对象
         function createPlayer(x, y, color, facing) {
             return {
                 x: x,
@@ -193,12 +193,14 @@
                 invincible: 0,
                 arrowsLeft: 5,
                 maxArrows: 5,
-                swordLength: 5,
+                swordLength: 50, // 像素长度
+                swordWidth: 12,
                 onPlatform: false,
                 jumpBoosted: false,
                 crouching: false,
                 crouchKeyHeld: false,
-                animTimer: 0
+                animTimer: 0,
+                attackCooldown: 0
             };
         }
         
@@ -230,13 +232,14 @@
         
         // 红色玩家攻击
         function player1Attack(type) {
-            if (player1.attacking || player1.crouching) return;
+            if (player1.attacking || player1.crouching || player1.attackCooldown > 0) return;
             
             if (type === 'bow' && player1.arrowsLeft <= 0) return;
             
             player1.attacking = true;
             player1.attackType = type;
-            player1.attackTimer = type === 'sword' ? 25 : 15;
+            player1.attackTimer = type === 'sword' ? 20 : 15;
+            player1.attackCooldown = 30; // 攻击冷却
             
             if (type === 'bow') {
                 player1.arrowsLeft--;
@@ -254,13 +257,14 @@
         
         // 蓝色玩家攻击
         function player2Attack(type) {
-            if (player2.attacking || player2.crouching) return;
+            if (player2.attacking || player2.crouching || player2.attackCooldown > 0) return;
             
             if (type === 'bow' && player2.arrowsLeft <= 0) return;
             
             player2.attacking = true;
             player2.attackType = type;
-            player2.attackTimer = type === 'sword' ? 25 : 15;
+            player2.attackTimer = type === 'sword' ? 20 : 15;
+            player2.attackCooldown = 30;
             
             if (type === 'bow') {
                 player2.arrowsLeft--;
@@ -288,7 +292,7 @@
         function update() {
             if (!gameRunning) return;
             
-            // 红色玩家
+            // 更新玩家
             updatePlayer(player1, {
                 left: keys['a'] || keys['A'],
                 right: keys['d'] || keys['D'],
@@ -296,7 +300,6 @@
                 crouch: keys['s'] || keys['S']
             });
             
-            // 蓝色玩家
             updatePlayer(player2, {
                 left: keys['ArrowLeft'],
                 right: keys['ArrowRight'],
@@ -304,11 +307,22 @@
                 crouch: keys['ArrowDown']
             });
             
+            // 剑攻击检测 - 在更新后检测
+            if (player1.attacking && player1.attackType === 'sword') {
+                checkSwordHit(player1, player2);
+            }
+            if (player2.attacking && player2.attackType === 'sword') {
+                checkSwordHit(player2, player1);
+            }
+            
             // 箭矢更新
             updateArrows();
         }
         
         function updatePlayer(p, input) {
+            // 冷却递减
+            if (p.attackCooldown > 0) p.attackCooldown--;
+            
             // 下蹲处理
             if (input.crouch && p.onGround) {
                 if (!p.crouching) {
@@ -417,7 +431,10 @@
             // 攻击计时器
             if (p.attackTimer > 0) {
                 p.attackTimer--;
-                if (p.attackTimer === 0) p.attacking = false;
+                if (p.attackTimer === 0) {
+                    p.attacking = false;
+                    p.attackType = '';
+                }
             }
             
             // 动画计时器
@@ -465,24 +482,42 @@
             }
         }
         
-        // 剑攻击检测
+        // 剑攻击检测 - 修复版
         function checkSwordHit(attacker, target) {
-            if (!attacker.attacking || attacker.attackType !== 'sword') return;
-            if (attacker.attackTimer !== 18) return;
+            // 只在攻击的前半段检测伤害，避免重复判定
+            if (attacker.attackTimer < 10 || attacker.attackTimer > 18) return;
             
-            const swordLength = 50;
-            const swordWidth = 12;
+            // 已经命中过这次攻击了
+            if (attacker.hasHit) return;
             
-            let attackY = attacker.crouching ? attacker.y + 5 : attacker.y + 15;
-            let attackX = attacker.facing === 1 ? attacker.x + attacker.width : attacker.x - swordLength;
+            const swordLength = attacker.swordLength;
+            const swordWidth = attacker.swordWidth;
             
-            if (attackX < target.x + target.width && attackX + swordLength > target.x &&
-                attackY < target.y + target.height && attackY + swordWidth > target.y) {
+            // 根据朝向计算攻击范围
+            let attackX, attackY;
+            
+            if (attacker.facing === 1) {
+                // 朝右
+                attackX = attacker.x + attacker.width;
+                attackY = attacker.crouching ? attacker.y + 5 : attacker.y + 15;
+            } else {
+                // 朝左
+                attackX = attacker.x - swordLength;
+                attackY = attacker.crouching ? attacker.y + 5 : attacker.y + 15;
+            }
+            
+            // 检测碰撞
+            if (attackX < target.x + target.width && 
+                attackX + swordLength > target.x &&
+                attackY < target.y + target.height && 
+                attackY + swordWidth > target.y) {
+                
                 if (target.invincible === 0) {
                     target.hp--;
                     target.invincible = 60;
                     target.vx = attacker.facing * 12;
                     target.vy = -8;
+                    attacker.hasHit = true; // 标记已命中
                     updateHP();
                     checkWin();
                 }
@@ -569,7 +604,7 @@
             });
         }
         
-        // 绘制人形玩家
+        // 绘制人形玩家 - 修复剑方向
         function drawHumanPlayer(p) {
             ctx.save();
             
@@ -636,32 +671,39 @@
             ctx.fillStyle = 'black';
             ctx.fillRect(eyeX + (p.facing === 1 ? 1 : 0), headY + 5, 2, 2);
             
-            // 手臂和武器
+            // 手臂和武器 - 修复方向问题
             const armY = bodyY + 5;
             
             if (p.attacking && p.attackType === 'sword') {
+                // 挥剑动画 - 根据朝向正确绘制
                 ctx.save();
-                ctx.translate(centerX, armY + 10);
                 
-                let progress = (25 - p.attackTimer) / 25;
-                let angle = p.facing === 1 ? 
+                // 移动到肩膀位置
+                ctx.translate(centerX + (p.facing === 1 ? 8 : -8), armY + 10);
+                
+                // 根据朝向和攻击进度计算角度
+                let progress = (20 - p.attackTimer) / 20; // 0到1
+                let baseAngle = p.facing === 1 ? 0 : Math.PI;
+                let swingAngle = p.facing === 1 ? 
                     -Math.PI/3 + progress * Math.PI/1.5 : 
                     Math.PI/3 - progress * Math.PI/1.5;
                 
-                ctx.rotate(angle);
+                ctx.rotate(swingAngle);
                 
+                // 手臂
                 ctx.fillStyle = skinColor;
                 ctx.fillRect(0, -3, 15, 6);
                 
-                const swordLength = 50;
+                // 剑 - 绘制在手臂前方
+                const swordLength = p.swordLength;
                 ctx.fillStyle = '#8b4513';
-                ctx.fillRect(12, -4, 10, 8);
+                ctx.fillRect(12, -4, 10, 8); // 剑柄
                 ctx.fillStyle = '#f1c40f';
-                ctx.fillRect(20, -6, 4, 12);
+                ctx.fillRect(20, -6, 4, 12); // 护手
                 ctx.fillStyle = '#bdc3c7';
-                ctx.fillRect(22, -3, swordLength, 6);
+                ctx.fillRect(22, -3, swordLength, 6); // 剑刃
                 ctx.fillStyle = '#ecf0f1';
-                ctx.fillRect(22, -1, swordLength, 2);
+                ctx.fillRect(22, -1, swordLength, 2); // 剑刃高光
                 ctx.fillStyle = '#95a5a6';
                 ctx.beginPath();
                 ctx.moveTo(22 + swordLength, -3);
@@ -671,18 +713,22 @@
                 
                 ctx.restore();
             } else {
+                // 持剑姿势 - 根据朝向
                 ctx.fillStyle = skinColor;
                 if (p.facing === 1) {
+                    // 朝右
                     ctx.fillRect(centerX, armY, 12, 5);
                     ctx.fillRect(centerX + 10, armY - 2, 5, 10);
                 } else {
+                    // 朝左
                     ctx.fillRect(centerX - 12, armY, 12, 5);
                     ctx.fillRect(centerX - 15, armY - 2, 5, 10);
                 }
                 
+                // 背着的剑 - 根据朝向调整角度
                 ctx.save();
-                ctx.translate(centerX + (p.facing === 1 ? -8 : 8), bodyY + 5);
-                ctx.rotate(p.facing === 1 ? -0.3 : 0.3);
+                ctx.translate(centerX + (p.facing === 1 ? -10 : 10), bodyY + 5);
+                ctx.rotate(p.facing === 1 ? -0.4 : 0.4);
                 
                 ctx.fillStyle = '#8b4513';
                 ctx.fillRect(-3, 0, 6, 12);
@@ -699,7 +745,7 @@
                 ctx.strokeStyle = '#8b4513';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.arc(centerX + (p.facing === 1 ? -10 : 10), bodyY + 8, 10, Math.PI/2, -Math.PI/2, true);
+                ctx.arc(centerX + (p.facing === 1 ? -12 : 12), bodyY + 8, 10, Math.PI/2, -Math.PI/2, true);
                 ctx.stroke();
             }
             
@@ -716,6 +762,7 @@
                 }
             }
             
+            // 下蹲指示
             if (isCrouching) {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.fillRect(p.x, p.y, p.width, p.height);
@@ -735,9 +782,6 @@
         }
         
         function checkWin() {
-            checkSwordHit(player1, player2);
-            checkSwordHit(player2, player1);
-            
             if (player1.hp <= 0) {
                 endGame('🔵 蓝色大侠获胜！');
             } else if (player2.hp <= 0) {
@@ -752,6 +796,7 @@
         }
         
         function resetGame() {
+            // 完全重置玩家状态
             Object.assign(player1, createPlayer(150, groundY - 50, '#e74c3c', 1));
             Object.assign(player2, createPlayer(1050, groundY - 50, '#3498db', -1));
             
