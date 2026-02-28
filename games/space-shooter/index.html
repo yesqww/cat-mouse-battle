@@ -2,13 +2,14 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>太空射击 - Space Shooter</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            touch-action: none;
         }
         
         body {
@@ -20,22 +21,27 @@
             min-height: 100vh;
             font-family: 'Microsoft YaHei', sans-serif;
             overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
         }
         
         #gameCanvas {
             border: 2px solid #4ecdc4;
             box-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
+            max-width: 100%;
+            max-height: 100%;
         }
         
         .ui {
             position: absolute;
-            top: 20px;
+            top: 10px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 30px;
+            gap: 20px;
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             text-shadow: 0 0 10px currentColor;
             z-index: 10;
         }
@@ -60,7 +66,7 @@
         }
         
         .modal h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             margin-bottom: 20px;
             background: linear-gradient(45deg, #4ecdc4, #feca57);
             -webkit-background-clip: text;
@@ -70,6 +76,9 @@
         .modal p {
             margin: 10px 0;
             color: #aaa;
+            font-size: 0.9rem;
+            padding: 0 20px;
+            text-align: center;
         }
         
         .btn {
@@ -84,7 +93,7 @@
             transition: all 0.3s;
         }
         
-        .btn:hover {
+        .btn:hover, .btn:active {
             transform: scale(1.1);
             box-shadow: 0 0 30px rgba(78, 205, 196, 0.5);
         }
@@ -93,9 +102,110 @@
         
         .controls-hint {
             position: absolute;
-            bottom: 20px;
+            bottom: 10px;
             color: #666;
-            font-size: 14px;
+            font-size: 12px;
+            text-align: center;
+            width: 100%;
+        }
+        
+        /* 触摸控制区域 */
+        .touch-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            height: 150px;
+            pointer-events: none;
+            display: none;
+        }
+        
+        .touch-controls.active {
+            display: block;
+        }
+        
+        .joystick-area {
+            position: absolute;
+            left: 30px;
+            bottom: 20px;
+            width: 120px;
+            height: 120px;
+            pointer-events: auto;
+        }
+        
+        .joystick-base {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid rgba(78, 205, 196, 0.3);
+            border-radius: 50%;
+            background: rgba(78, 205, 196, 0.1);
+        }
+        
+        .joystick-stick {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(78, 205, 196, 0.6);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+        }
+        
+        .fire-btn {
+            position: absolute;
+            right: 30px;
+            bottom: 40px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 107, 107, 0.3);
+            border: 3px solid rgba(255, 107, 107, 0.5);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            user-select: none;
+        }
+        
+        .fire-btn:active {
+            background: rgba(255, 107, 107, 0.6);
+            transform: scale(0.95);
+        }
+        
+        .pause-btn {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            z-index: 20;
+        }
+        
+        @media (max-width: 768px) {
+            .ui {
+                font-size: 14px;
+                gap: 15px;
+            }
+            .modal h1 {
+                font-size: 2rem;
+            }
+            .controls-hint {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -106,15 +216,25 @@
         <div class="level">等级: <span id="level">1</span></div>
     </div>
     
+    <div class="pause-btn" id="pauseBtn" onclick="togglePause()">⏸</div>
+    
     <canvas id="gameCanvas" width="600" height="800"></canvas>
     
-    <div class="controls-hint">方向键移动 | 空格射击 | P暂停</div>
+    <div class="controls-hint">电脑: 方向键移动 | 空格射击 | P暂停<br>手机: 左侧摇杆移动 | 右侧按钮射击</div>
+    
+    <div class="touch-controls" id="touchControls">
+        <div class="joystick-area" id="joystickArea">
+            <div class="joystick-base"></div>
+            <div class="joystick-stick" id="joystickStick"></div>
+        </div>
+        <div class="fire-btn" id="fireBtn">🔥</div>
+    </div>
     
     <div class="modal" id="startModal">
         <h1>🚀 太空射击</h1>
         <p>消灭外星敌人，保卫地球！</p>
-        <p>方向键移动飞船，空格键发射子弹</p>
-        <p>收集道具升级武器</p>
+        <p>💻 电脑: 方向键移动，空格射击</p>
+        <p>📱 手机: 左侧摇杆移动，右侧按钮射击</p>
         <button class="btn" onclick="startGame()">开始游戏</button>
     </div>
     
@@ -128,6 +248,14 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const touchControls = document.getElementById('touchControls');
+        const joystickArea = document.getElementById('joystickArea');
+        const joystickStick = document.getElementById('joystickStick');
+        const fireBtn = document.getElementById('fireBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        
+        // 检测是否为触摸设备
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         
         // 游戏状态
         let gameRunning = false;
@@ -158,6 +286,12 @@
         // 输入状态
         const keys = {};
         
+        // 触摸控制状态
+        let joystickActive = false;
+        let joystickCenter = { x: 0, y: 0 };
+        let joystickVector = { x: 0, y: 0 };
+        let fireActive = false;
+        
         // 初始化星空背景
         function initStars() {
             stars = [];
@@ -178,13 +312,79 @@
                 shoot();
             }
             if (e.key === 'p' || e.key === 'P') {
-                gamePaused = !gamePaused;
+                togglePause();
             }
         });
         
         document.addEventListener('keyup', (e) => {
             keys[e.key] = false;
         });
+        
+        // 触摸控制 - 摇杆
+        joystickArea.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = joystickArea.getBoundingClientRect();
+            joystickCenter = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+            joystickActive = true;
+            updateJoystick(touch.clientX, touch.clientY);
+        });
+        
+        joystickArea.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (joystickActive) {
+                updateJoystick(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+        
+        joystickArea.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            joystickActive = false;
+            joystickVector = { x: 0, y: 0 };
+            joystickStick.style.transform = `translate(-50%, -50%)`;
+        });
+        
+        function updateJoystick(clientX, clientY) {
+            const maxDist = 35;
+            let dx = clientX - joystickCenter.x;
+            let dy = clientY - joystickCenter.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > maxDist) {
+                dx = (dx / dist) * maxDist;
+                dy = (dy / dist) * maxDist;
+            }
+            
+            joystickStick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            
+            // 归一化向量
+            joystickVector = {
+                x: dx / maxDist,
+                y: dy / maxDist
+            };
+        }
+        
+        // 触摸控制 - 射击按钮
+        fireBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            fireActive = true;
+        });
+        
+        fireBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            fireActive = false;
+        });
+        
+        // 暂停按钮
+        function togglePause() {
+            if (gameRunning) {
+                gamePaused = !gamePaused;
+                pauseBtn.textContent = gamePaused ? '▶' : '⏸';
+            }
+        }
         
         // 射击
         function shoot() {
@@ -301,14 +501,22 @@
                 }
             }
             
-            // 玩家移动
+            // 玩家移动 - 键盘
             if (keys['ArrowLeft'] && player.x > 20) player.x -= player.speed;
             if (keys['ArrowRight'] && player.x < canvas.width - 20) player.x += player.speed;
             if (keys['ArrowUp'] && player.y > 50) player.y -= player.speed;
             if (keys['ArrowDown'] && player.y < canvas.height - 50) player.y += player.speed;
             
-            // 自动射击（按住空格）
-            if (keys[' '] && gameFrame % 10 === 0) {
+            // 玩家移动 - 摇杆
+            if (joystickActive) {
+                player.x += joystickVector.x * player.speed;
+                player.y += joystickVector.y * player.speed;
+                player.x = Math.max(20, Math.min(canvas.width - 20, player.x));
+                player.y = Math.max(50, Math.min(canvas.height - 50, player.y));
+            }
+            
+            // 自动射击
+            if ((keys[' '] || fireActive) && gameFrame % 10 === 0) {
                 shoot();
             }
             
@@ -332,7 +540,6 @@
                 let enemy = enemies[i];
                 enemy.y += enemy.speed;
                 
-                // 陨石旋转效果
                 if (enemy.type === 'meteor') {
                     enemy.rotation += 0.05;
                 }
@@ -351,7 +558,6 @@
                     continue;
                 }
                 
-                // 移除超出屏幕的敌人
                 if (enemy.y > canvas.height + 50) {
                     enemies.splice(i, 1);
                 }
@@ -372,7 +578,6 @@
                             spawnPowerup(enemies[e].x, enemies[e].y);
                             enemies.splice(e, 1);
                             
-                            // 升级
                             if (score > level * 200) {
                                 level++;
                             }
@@ -389,7 +594,6 @@
             for (let i = powerups.length - 1; i >= 0; i--) {
                 powerups[i].y += powerups[i].speed;
                 
-                // 收集检测
                 const dist = Math.hypot(powerups[i].x - player.x, powerups[i].y - player.y);
                 if (dist < 30) {
                     if (powerups[i].type === 'weapon' && player.weaponLevel < 3) {
@@ -431,7 +635,6 @@
         
         // 绘制游戏
         function draw() {
-            // 清空画布
             ctx.fillStyle = '#0a0a1a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
@@ -449,12 +652,10 @@
             ctx.save();
             ctx.translate(player.x, player.y);
             
-            // 无敌闪烁
             if (player.invincible > 0 && Math.floor(gameFrame / 4) % 2 === 0) {
                 ctx.globalAlpha = 0.5;
             }
             
-            // 飞船主体
             ctx.fillStyle = '#4ecdc4';
             ctx.shadowBlur = 20;
             ctx.shadowColor = '#4ecdc4';
@@ -466,7 +667,6 @@
             ctx.closePath();
             ctx.fill();
             
-            // 飞船引擎火焰
             ctx.fillStyle = '#ff6b6b';
             ctx.shadowColor = '#ff6b6b';
             ctx.beginPath();
@@ -581,7 +781,7 @@
                 ctx.textAlign = 'center';
                 ctx.fillText('已暂停', canvas.width / 2, canvas.height / 2);
                 ctx.font = '24px Microsoft YaHei';
-                ctx.fillText('按 P 继续', canvas.width / 2, canvas.height / 2 + 50);
+                ctx.fillText('按 P 或点击 ▶ 继续', canvas.width / 2, canvas.height / 2 + 50);
             }
         }
         
@@ -599,6 +799,12 @@
             document.getElementById('startModal').classList.add('hidden');
             gameRunning = true;
             initStars();
+            
+            // 显示触摸控制
+            if (isTouchDevice) {
+                touchControls.classList.add('active');
+            }
+            
             gameLoop();
         }
         
@@ -608,11 +814,11 @@
             document.getElementById('finalScore').textContent = score;
             document.getElementById('finalLevel').textContent = level;
             document.getElementById('gameOverModal').classList.remove('hidden');
+            touchControls.classList.remove('active');
         }
         
         // 重新开始
         function restartGame() {
-            // 重置状态
             score = 0;
             lives = 3;
             level = 1;
@@ -632,6 +838,11 @@
             document.getElementById('level').textContent = level;
             
             gameRunning = true;
+            
+            if (isTouchDevice) {
+                touchControls.classList.add('active');
+            }
+            
             initStars();
             gameLoop();
         }
