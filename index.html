@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mario的游戏中心 - Game Center</title>
+    <title>游戏中心 - Game Center</title>
     <style>
         * {
             margin: 0;
@@ -185,7 +185,7 @@
 </head>
 <body>
     <header>
-        <h1>🎮 Mario的游戏中心</h1>
+        <h1>🎮 游戏中心</h1>
         <p class="subtitle">Game Center - 精选HTML5小游戏</p>
     </header>
     
@@ -204,6 +204,23 @@
                     <span class="tag">HTML5</span>
                 </div>
                 <a href="./games/cat-mouse/" class="play-btn">开始游戏 →</a>
+            </div>
+        </div>
+        
+        <!-- 太空射击 -->
+        <div class="game-card" onclick="window.location.href='./games/space-shooter/'">
+            <div class="game-preview" style="background: linear-gradient(135deg, #1a1a3e 0%, #0f0f2e 100%);">
+                <span class="game-icon">🚀👾</span>
+            </div>
+            <div class="game-info">
+                <h2 class="game-title">太空射击</h2>
+                <p class="game-desc">经典竖版射击游戏！驾驶飞船消灭外星敌人，收集道具升级武器，挑战更高分数！方向键移动，空格射击。</p>
+                <div class="game-meta">
+                    <span class="tag">射击</span>
+                    <span class="tag">闯关</span>
+                    <span class="tag">单人</span>
+                </div>
+                <a href="./games/space-shooter/" class="play-btn">开始游戏 →</a>
             </div>
         </div>
         
@@ -228,5 +245,3 @@
     </footer>
 </body>
 </html>
-
-
