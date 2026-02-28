@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>红蓝大侠对决 - 完全版</title>
+    <title>红蓝大侠对决 - 红旗版</title>
     <style>
         body {
             margin: 0;
@@ -96,7 +96,7 @@
     </style>
 </head>
 <body>
-    <h1>⚔️ 红蓝大侠对决 🏹</h1>
+    <h1>⚔️ 红蓝大侠对决 🚩</h1>
     
     <div style="position: relative;">
         <canvas id="gameCanvas" width="1200" height="800"></canvas>
@@ -133,53 +133,53 @@
         // 游戏状态
         let gameRunning = true;
         const gravity = 0.5;
-        const groundY = 750; // 地面降低，给上方更多空间
+        const groundY = 750;
         
-        // 地图元素 - 更多空中踏板，更高地图
+        // 地图元素 - 减少黄色踏板，大部分是灰色
         const platforms = [
             // 地面
             {x: 0, y: groundY, width: 300, height: 50, type: 'ground'},
             {x: 400, y: groundY, width: 400, height: 50, type: 'ground'},
             {x: 900, y: groundY, width: 300, height: 50, type: 'ground'},
             
-            // 第一层跳板 - 低层平台
+            // 第一层跳板 - 全是灰色
             {x: 100, y: 680, width: 100, height: 20, type: 'platform', jumpBoost: false},
             {x: 300, y: 650, width: 120, height: 20, type: 'platform', jumpBoost: false},
             {x: 550, y: 680, width: 100, height: 20, type: 'platform', jumpBoost: false},
             {x: 800, y: 650, width: 120, height: 20, type: 'platform', jumpBoost: false},
             {x: 1000, y: 680, width: 100, height: 20, type: 'platform', jumpBoost: false},
             
-            // 第二层跳板
+            // 第二层跳板 - 全是灰色
             {x: 200, y: 580, width: 100, height: 20, type: 'platform', jumpBoost: false},
-            {x: 450, y: 550, width: 120, height: 20, type: 'platform', jumpBoost: true},
+            {x: 450, y: 550, width: 120, height: 20, type: 'platform', jumpBoost: false},
             {x: 700, y: 580, width: 100, height: 20, type: 'platform', jumpBoost: false},
-            {x: 950, y: 550, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            {x: 950, y: 550, width: 100, height: 20, type: 'platform', jumpBoost: false},
             
-            // 第三层跳板
-            {x: 100, y: 480, width: 80, height: 20, type: 'platform', jumpBoost: true},
+            // 第三层跳板 - 只有一个是黄色
+            {x: 100, y: 480, width: 80, height: 20, type: 'platform', jumpBoost: false},
             {x: 350, y: 450, width: 100, height: 20, type: 'platform', jumpBoost: false},
             {x: 600, y: 480, width: 100, height: 20, type: 'platform', jumpBoost: false},
-            {x: 850, y: 450, width: 100, height: 20, type: 'platform', jumpBoost: true},
-            {x: 1050, y: 480, width: 80, height: 20, type: 'platform', jumpBoost: true},
+            {x: 850, y: 450, width: 100, height: 20, type: 'platform', jumpBoost: true}, // 唯一黄色
+            {x: 1050, y: 480, width: 80, height: 20, type: 'platform', jumpBoost: false},
             
-            // 第四层跳板
-            {x: 250, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: true},
-            {x: 500, y: 350, width: 120, height: 20, type: 'platform', jumpBoost: true},
-            {x: 750, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            // 第四层跳板 - 全是灰色
+            {x: 250, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: false},
+            {x: 500, y: 350, width: 120, height: 20, type: 'platform', jumpBoost: false},
+            {x: 750, y: 380, width: 100, height: 20, type: 'platform', jumpBoost: false},
             
-            // 第五层跳板
-            {x: 150, y: 280, width: 80, height: 20, type: 'platform', jumpBoost: true},
+            // 第五层跳板 - 全是灰色
+            {x: 150, y: 280, width: 80, height: 20, type: 'platform', jumpBoost: false},
             {x: 400, y: 280, width: 100, height: 20, type: 'platform', jumpBoost: false},
             {x: 650, y: 280, width: 100, height: 20, type: 'platform', jumpBoost: false},
-            {x: 900, y: 280, width: 80, height: 20, type: 'platform', jumpBoost: true},
+            {x: 900, y: 280, width: 80, height: 20, type: 'platform', jumpBoost: false},
             
-            // 第六层 - 高空平台
-            {x: 300, y: 200, width: 100, height: 20, type: 'platform', jumpBoost: true},
-            {x: 550, y: 180, width: 100, height: 20, type: 'platform', jumpBoost: true},
-            {x: 800, y: 200, width: 100, height: 20, type: 'platform', jumpBoost: true},
+            // 第六层 - 全是灰色
+            {x: 300, y: 200, width: 100, height: 20, type: 'platform', jumpBoost: false},
+            {x: 550, y: 180, width: 100, height: 20, type: 'platform', jumpBoost: false},
+            {x: 800, y: 200, width: 100, height: 20, type: 'platform', jumpBoost: false},
             
-            // 最高层 - 巅峰对决
-            {x: 525, y: 100, width: 150, height: 20, type: 'platform', jumpBoost: true},
+            // 最高层 - 放红旗的地方
+            {x: 525, y: 100, width: 150, height: 20, type: 'platform', jumpBoost: false},
         ];
         
         // 坑洞
@@ -187,6 +187,16 @@
             {x: 300, y: groundY, width: 100, height: 100},
             {x: 800, y: groundY, width: 100, height: 100}
         ];
+        
+        // 红旗道具
+        let redFlag = {
+            x: 600, // 最高层平台中央
+            y: 70,  // 平台上方
+            width: 30,
+            height: 30,
+            active: true, // 是否可拾取
+            owner: null   // 谁拿着旗子
+        };
         
         // 玩家对象
         function createPlayer(x, y, color, facing) {
@@ -221,7 +231,8 @@
                 crouchKeyHeld: false,
                 animTimer: 0,
                 attackCooldown: 0,
-                hitTargets: [] // 记录本次攻击已命中的目标
+                hitTargets: [],
+                hasFlag: false // 是否拿着红旗
             };
         }
         
@@ -258,7 +269,7 @@
             player1.attackType = type;
             player1.attackTimer = type === 'sword' ? 20 : 15;
             player1.attackCooldown = 25;
-            player1.hitTargets = []; // 清空已命中列表
+            player1.hitTargets = [];
             
             if (type === 'bow') {
                 player1.arrowsLeft--;
@@ -284,7 +295,7 @@
             player2.attackType = type;
             player2.attackTimer = type === 'sword' ? 20 : 15;
             player2.attackCooldown = 25;
-            player2.hitTargets = []; // 清空已命中列表
+            player2.hitTargets = [];
             
             if (type === 'bow') {
                 player2.arrowsLeft--;
@@ -326,13 +337,16 @@
                 crouch: keys['ArrowDown']
             });
             
-            // 剑攻击检测 - 每帧检测，但每个目标只命中一次
+            // 剑攻击检测
             if (player1.attacking && player1.attackType === 'sword') {
                 checkSwordHit(player1, player2);
             }
             if (player2.attacking && player2.attackType === 'sword') {
                 checkSwordHit(player2, player1);
             }
+            
+            // 检测红旗拾取
+            checkFlagPickup();
             
             updateArrows();
         }
@@ -370,9 +384,10 @@
                 }
             }
             
-            // 移动
+            // 移动 - 修复左边卡住问题
             let currentSpeed = p.crouching ? p.crouchSpeed : p.speed;
             
+            // 确保速度计算正确
             if (input.left) {
                 p.vx = -currentSpeed;
                 p.facing = -1;
@@ -380,7 +395,10 @@
                 p.vx = currentSpeed;
                 p.facing = 1;
             } else {
+                // 摩擦力减速
                 p.vx *= 0.8;
+                // 防止速度过小导致的卡住
+                if (Math.abs(p.vx) < 0.1) p.vx = 0;
             }
             
             // 跳跃
@@ -403,19 +421,37 @@
             
             // 物理更新
             p.vy += gravity;
+            
+            // 保存旧位置用于碰撞回退
+            let oldX = p.x;
+            let oldY = p.y;
+            
             p.x += p.vx;
             p.y += p.vy;
+            
+            // 边界检查 - 防止卡墙
+            if (p.x < 0) {
+                p.x = 0;
+                p.vx = 0;
+            }
+            if (p.x > canvas.width - p.width) {
+                p.x = canvas.width - p.width;
+                p.vx = 0;
+            }
             
             p.onGround = false;
             p.onPlatform = false;
             p.jumpBoosted = false;
             
             // 平台碰撞
+            let onPlatformNow = false;
             platforms.forEach(plat => {
                 if (checkCollision(p, plat)) {
-                    if (p.vy > 0 && p.y + p.height - p.vy <= plat.y + 10) {
+                    // 从上方落下
+                    if (p.vy > 0 && oldY + p.height <= plat.y + 10) {
                         p.y = plat.y - p.height;
                         p.vy = 0;
+                        onPlatformNow = true;
                         
                         if (plat.type === 'ground') {
                             p.onGround = true;
@@ -425,6 +461,20 @@
                                 p.jumpBoosted = true;
                             }
                         }
+                    }
+                    // 从下方跳上去（头顶碰撞）
+                    else if (p.vy < 0 && oldY >= plat.y + plat.height - 10) {
+                        p.y = plat.y + plat.height;
+                        p.vy = 0;
+                    }
+                    // 侧面碰撞
+                    else if (p.vx > 0 && oldX + p.width <= plat.x + 5) {
+                        p.x = plat.x - p.width;
+                        p.vx = 0;
+                    }
+                    else if (p.vx < 0 && oldX >= plat.x + plat.width - 5) {
+                        p.x = plat.x + plat.width;
+                        p.vx = 0;
                     }
                 }
             });
@@ -438,10 +488,6 @@
                 }
             });
             
-            // 边界限制
-            if (p.x < 0) p.x = 0;
-            if (p.x > canvas.width - p.width) p.x = canvas.width - p.width;
-            
             // 无敌时间
             if (p.invincible > 0) p.invincible--;
             
@@ -451,7 +497,7 @@
                 if (p.attackTimer === 0) {
                     p.attacking = false;
                     p.attackType = '';
-                    p.hitTargets = []; // 攻击结束清空命中列表
+                    p.hitTargets = [];
                 }
             }
             
@@ -462,6 +508,32 @@
                 updateHP();
                 checkWin();
             }
+        }
+        
+        // 检测红旗拾取
+        function checkFlagPickup() {
+            if (!redFlag.active) return;
+            
+            // 检测玩家与红旗碰撞
+            [player1, player2].forEach((p, index) => {
+                if (checkCollision(p, redFlag)) {
+                    // 拾取红旗
+                    redFlag.active = false;
+                    p.hasFlag = true;
+                    redFlag.owner = index + 1;
+                    
+                    // 对对方造成2点伤害
+                    let opponent = index === 0 ? player2 : player1;
+                    if (opponent.invincible === 0) {
+                        opponent.hp -= 2;
+                        opponent.invincible = 60;
+                        opponent.vx = (p.x < opponent.x ? 1 : -1) * 15;
+                        opponent.vy = -10;
+                        updateHP();
+                        checkWin();
+                    }
+                }
+            });
         }
         
         function updateArrows() {
@@ -498,18 +570,14 @@
             }
         }
         
-        // 剑攻击检测 - 修复版：每次攻击每个目标只能命中一次，但下次攻击可以再次命中
+        // 剑攻击检测
         function checkSwordHit(attacker, target) {
-            // 只在攻击的有效帧数内检测（第8到第18帧）
             if (attacker.attackTimer < 8 || attacker.attackTimer > 18) return;
-            
-            // 检查这个目标是否已经被本次攻击命中过
             if (attacker.hitTargets.includes(target)) return;
             
             const swordLength = attacker.swordLength;
             const swordWidth = attacker.swordWidth;
             
-            // 根据朝向计算攻击范围
             let attackX, attackY;
             
             if (attacker.facing === 1) {
@@ -520,7 +588,6 @@
                 attackY = attacker.crouching ? attacker.y + 5 : attacker.y + 15;
             }
             
-            // 检测碰撞
             if (attackX < target.x + target.width && 
                 attackX + swordLength > target.x &&
                 attackY < target.y + target.height && 
@@ -532,7 +599,6 @@
                     target.vx = attacker.facing * 12;
                     target.vy = -8;
                     
-                    // 记录这个目标已被本次攻击命中
                     attacker.hitTargets.push(target);
                     
                     updateHP();
@@ -546,14 +612,10 @@
             ctx.fillStyle = '#0f3460';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 背景装饰 - 更多层次
+            // 背景装饰
             ctx.fillStyle = 'rgba(255,255,255,0.03)';
             for(let i=0; i<15; i++) {
                 ctx.fillRect(i*100, 150 + Math.sin(i)*80, 60, 60);
-            }
-            ctx.fillStyle = 'rgba(255,255,255,0.02)';
-            for(let i=0; i<10; i++) {
-                ctx.fillRect(i*150 + 50, 50 + Math.cos(i)*60, 40, 40);
             }
             
             // 坑洞
@@ -575,6 +637,7 @@
                     ctx.fillRect(plat.x, plat.y, plat.width, 5);
                 } else {
                     if (plat.jumpBoost) {
+                        // 黄色弹跳板
                         ctx.fillStyle = '#f1c40f';
                         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
                         ctx.fillStyle = '#f39c12';
@@ -583,6 +646,7 @@
                         ctx.font = 'bold 14px Arial';
                         ctx.fillText('↑', plat.x + plat.width/2 - 6, plat.y - 5);
                     } else {
+                        // 灰色普通平台
                         ctx.fillStyle = '#95a5a6';
                         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
                         ctx.fillStyle = '#7f8c8d';
@@ -591,8 +655,21 @@
                 }
             });
             
+            // 绘制红旗
+            if (redFlag.active) {
+                drawRedFlag(redFlag.x, redFlag.y);
+            }
+            
             drawHumanPlayer(player1);
             drawHumanPlayer(player2);
+            
+            // 如果有玩家拿着旗子，在头顶显示
+            if (player1.hasFlag) {
+                drawRedFlag(player1.x + player1.width/2 - 15, player1.y - 40);
+            }
+            if (player2.hasFlag) {
+                drawRedFlag(player2.x + player2.width/2 - 15, player2.y - 40);
+            }
             
             arrows.forEach(arrow => {
                 ctx.save();
@@ -622,6 +699,29 @@
                 
                 ctx.restore();
             });
+        }
+        
+        // 绘制红旗
+        function drawRedFlag(x, y) {
+            // 旗杆
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(x + 2, y, 4, 30);
+            
+            // 旗帜
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.moveTo(x + 6, y);
+            ctx.lineTo(x + 30, y + 8);
+            ctx.lineTo(x + 6, y + 16);
+            ctx.fill();
+            
+            // 旗面高光
+            ctx.fillStyle = '#c0392b';
+            ctx.beginPath();
+            ctx.moveTo(x + 6, y + 16);
+            ctx.lineTo(x + 20, y + 10);
+            ctx.lineTo(x + 6, y + 8);
+            ctx.fill();
         }
         
         function drawHumanPlayer(p) {
@@ -773,8 +873,8 @@
         }
         
         function updateHP() {
-            document.getElementById('red-hp').textContent = '❤️'.repeat(player1.hp) + '🖤'.repeat(player1.maxHp-player1.hp);
-            document.getElementById('blue-hp').textContent = '❤️'.repeat(player2.hp) + '🖤'.repeat(player2.maxHp-player2.hp);
+            document.getElementById('red-hp').textContent = '❤️'.repeat(Math.max(0, player1.hp)) + '🖤'.repeat(Math.max(0, player1.maxHp-player1.hp));
+            document.getElementById('blue-hp').textContent = '❤️'.repeat(Math.max(0, player2.hp)) + '🖤'.repeat(Math.max(0, player2.maxHp-player2.hp));
         }
         
         function updateAmmo() {
@@ -799,6 +899,10 @@
         function resetGame() {
             Object.assign(player1, createPlayer(150, groundY - 50, '#e74c3c', 1));
             Object.assign(player2, createPlayer(1050, groundY - 50, '#3498db', -1));
+            
+            // 重置红旗
+            redFlag.active = true;
+            redFlag.owner = null;
             
             arrows = [];
             gameRunning = true;
